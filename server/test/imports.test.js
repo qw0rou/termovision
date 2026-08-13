@@ -40,3 +40,11 @@ test('dashboard KPI query handles active bursts without sql binding errors', () 
   assert.ok(stats.affectedConsumers >= 0);
   assert.ok(typeof stats.burstsLastYear === 'number');
 });
+
+test('passport registry is filled for imported object types', () => {
+  const count = db.prepare('SELECT count(*) n FROM object_passports').get().n;
+  assert.ok(count >= 30, 'passport registry should contain imported KML objects');
+  const example = db.prepare("SELECT * FROM object_passports WHERE entity_type='heat_chamber' LIMIT 1").get();
+  assert.ok(example && example.entity_name, 'a heat chamber should have a populated passport row');
+  assert.ok(example.entity_id || example.entity_name, 'passport row should carry object identity');
+});
