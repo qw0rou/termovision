@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node server/index.js",
     "dev": "nodemon server/index.js",
-    "import-all": "node server/scripts/import-kml.js && node server/scripts/import-houses.js && node server/scripts/import-incidents.js && node server/scripts/import-defects.js",
+    "import-all": "node server/scripts/import-kml.js && node server/scripts/build-topology.js && node server/scripts/import-houses.js && node server/scripts/import-incidents.js && node server/scripts/import-defects.js",
     "test": "node --test server/test/*.test.js"
   },
   "dependencies": { "better-sqlite3": "^11.7.0", "cors": "^2.8.5", "dotenv": "^16.4.7", "express": "^4.21.2", "fast-xml-parser": "^4.5.1", "multer": "^1.4.5-lts.1" },

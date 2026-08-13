@@ -1,1 +1,235 @@
-<!doctype html><html lang="ru"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="manifest" href="manifest.json"><title>КТЭК — бригада</title><style>body{max-width:850px;margin:auto;padding:16px;background:#f1f5f9;font:15px system-ui;color:#172554}header{display:flex;justify-content:space-between;align-items:center}section{background:#fff;padding:16px;border-radius:10px;margin:12px 0;box-shadow:0 1px 5px #cbd5e1}label{font-size:12px;font-weight:bold;display:block;margin-top:7px}input,select,textarea,button{width:100%;box-sizing:border-box;padding:9px;margin-top:3px}button{background:#1677b8;border:0;color:#fff;border-radius:5px;font-weight:bold}.task{padding:10px;border-bottom:1px solid #ddd}.offline{color:#c2410c;font-weight:bold}</style><body><header><h1>🔧 Планшет бригады</h1><a href="/">Диспетчерская</a></header><section><b id=state>Проверка сети…</b><div id=tasks>Загрузка заданий…</div></section><section><h2>Фиксация дефекта</h2><form id=f><label>Источник<input name=source></label><label>Дата обнаружения<input name=dateObserved type=datetime-local required></label><label>Камера / ТК<input name=tk required></label><label>Адрес<input name=address></label><label>Классификация<select name=defectType><option>Течь</option><option>Коррозия</option><option>Нарушение изоляции</option><option>Затопление камеры</option></select></label><label>Тип сети<select name=networkType><option>Внутриквартальная</option><option>Магистраль</option></select></label><label>Критичность (1–10)<input name=priority type=number min=1 max=10 value=5></label><label>Примечание<textarea name=note></textarea></label><label>Фото<input name=photos type=file accept="image/*" multiple></label><button>Передать дефект</button></form></section><section><h2>GPS-корректировка топологии</h2><label>Node ID<input id=nodeId placeholder="N123"></label><label>Примечание<textarea id=topologyNote></textarea></label><button onclick="saveGps()">Получить GPS и отправить корректировку</button><div id=gps></div></section><script>const dbp=()=>new Promise(ok=>{let r=indexedDB.open('ktek_offline_v2',1);r.onupgradeneeded=()=>r.result.createObjectStore('q',{autoIncrement:true});r.onsuccess=()=>ok(r.result)});async function add(x){let d=await dbp();d.transaction('q','readwrite').objectStore('q').add(x)}async function all(){let d=await dbp();return new Promise(ok=>{let r=d.transaction('q').objectStore('q').getAll();r.onsuccess=()=>ok(r.result)})}async function wipe(){let d=await dbp();d.transaction('q','readwrite').objectStore('q').clear()}async function sync(){if(!navigator.onLine)return;let x=await all();for(let y of x)await fetch(y.url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(y.body)});if(x.length)await wipe()}function status(){state.textContent=navigator.onLine?'Онлайн · синхронизация включена':'Офлайн · записи сохраняются в защищённой очереди устройства';state.className=navigator.onLine?'':'offline'}async function loadTasks(){let x=await fetch('/api/field/tasks').then(r=>r.json());tasks.innerHTML='<h2>План-график осмотров</h2>'+x.map(t=>`<div class=task><b>${t.title}</b><br>${new Date(t.planned_at).toLocaleString('ru')} · Приоритет ${t.priority}<br><small>${t.node_name||t.node_id}</small><button onclick="finish('${t.id}')">Зафиксировать осмотр</button></div>`).join('')}async function finish(id){let note=prompt('Результат осмотра / комментарий','Осмотр выполнен');let pos=await new Promise(ok=>navigator.geolocation?navigator.geolocation.getCurrentPosition(x=>ok(x.coords),()=>ok({})):ok({}));let fd=new FormData;fd.append('worker','Бригада №1');fd.append('result','Выполнено');fd.append('note',note||'');fd.append('lat',pos.latitude||'');fd.append('lon',pos.longitude||'');await fetch('/api/field/tasks/'+id+'/complete',{method:'POST',body:fd});loadTasks()}f.dateObserved.value=new Date().toISOString().slice(0,16);f.onsubmit=async e=>{e.preventDefault();let fd=new FormData(f);if(navigator.onLine){await fetch('/api/field/defects',{method:'POST',body:fd});alert('Дефект передан диспетчеру')}else{await add({url:'/api/field/defects',body:Object.fromEntries([...fd.entries()].filter(([,v])=>typeof v==='string'))});alert('Офлайн: текстовые данные добавлены в очередь. Фотографии будут добавлены при восстановлении связи.')}f.reset()};async function saveGps(){let n=nodeId.value;if(!n)return alert('Укажите Node ID');navigator.geolocation.getCurrentPosition(async p=>{await fetch('/api/field/topology-edit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nodeId:n,lat:p.coords.latitude,lon:p.coords.longitude,note:topologyNote.value})});gps.textContent='Корректировка передана: '+p.coords.latitude.toFixed(6)+', '+p.coords.longitude.toFixed(6)},()=>gps.textContent='GPS недоступен: проверьте разрешение устройства')};addEventListener('online',()=>{status();sync()});addEventListener('offline',status);status();sync();loadTasks();if('serviceWorker'in navigator)navigator.serviceWorker.register('/sw.js')</script></body></html>
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="manifest" href="manifest.json">
+<title>КТЭК — планшет бригады</title>
+<style>
+:root{--bg:#f1f5f9;--card:#fff;--line:#cbd5e1;--txt:#172554;--accent:#1677b8}
+*{box-sizing:border-box}
+body{max-width:850px;margin:auto;padding:16px;background:var(--bg);font:15px system-ui;color:var(--txt)}
+header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+header h1{font-size:19px}
+header a{color:var(--accent);text-decoration:none}
+section{background:var(--card);padding:16px;border-radius:10px;margin:12px 0;box-shadow:0 1px 5px var(--line)}
+label{font-size:12px;font-weight:bold;display:block;margin-top:7px}
+input,select,textarea,button{width:100%;box-sizing:border-box;padding:9px;margin-top:3px;font:inherit}
+button{background:var(--accent);border:0;color:#fff;border-radius:5px;font-weight:bold;cursor:pointer}
+button.secondary{background:#475569}
+button.danger{background:#b91c1c}
+.task{padding:10px;border-bottom:1px solid var(--line)}
+.task b{display:block}
+.task .meta{font-size:12px;color:#475569;margin:3px 0}
+.pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:700}
+.pill.planned{background:#e2e8f0;color:#334155}.pill.in_progress{background:#fef3c7;color:#92400e}.pill.done{background:#dcfce7;color:#166534}
+.offline{color:#c2410c;font-weight:bold}
+#syncState{font-size:13px;margin-top:8px;color:#475569}
+.thumb{width:72px;height:54px;object-fit:cover;border-radius:5px;border:1px solid var(--line);margin:3px}
+.queued{margin-top:8px;font-size:13px;color:#475569}
+</style>
+</head>
+<body>
+<header>
+  <h1>🔧 Планшет бригады</h1>
+  <a href="/">Диспетчерская</a>
+</header>
+
+<section>
+  <b id="state">Проверка сети…</b>
+  <div id="syncState"></div>
+  <div id="tasks">Загрузка заданий…</div>
+</section>
+
+<section>
+  <h2>Ремонтные задания</h2>
+  <div id="repairs">Загрузка…</div>
+</section>
+
+<section>
+  <h2>Фиксация дефекта</h2>
+  <form id="f">
+    <label>Источник<input name="source" placeholder="КТЭК"></label>
+    <label>Дата обнаружения<input name="dateObserved" type="datetime-local" required></label>
+    <label>Камера / ТК<input name="tk" required placeholder="ТК5-03"></label>
+    <label>Адрес<input name="address"></label>
+    <label>Классификация<select name="defectType"><option>Течь</option><option>Коррозия</option><option>Нарушение изоляции</option><option>Затопление камеры</option><option>Повреждение задвижки</option></select></label>
+    <label>Тип сети<select name="networkType"><option>Внутриквартальная</option><option>Магистраль</option></select></label>
+    <label>Критичность (1–10)<input name="priority" type="number" min="1" max="10" value="5"></label>
+    <label>Примечание<textarea name="note"></textarea></label>
+    <label>Фото<input name="photos" type="file" accept="image/*" multiple></label>
+    <div id="preview"></div>
+    <button type="submit">Передать дефект</button>
+  </form>
+</section>
+
+<section>
+  <h2>GPS-корректировка топологии</h2>
+  <label>Node ID<input id="nodeId" placeholder="N123"></label>
+  <label>Примечание<textarea id="topologyNote"></textarea></label>
+  <button onclick="saveGps()">Получить GPS и отправить корректировку</button>
+  <div id="gps"></div>
+</section>
+
+<script>
+const dbp = () => new Promise(ok => {
+  let r = indexedDB.open('ktek_offline_v3', 1);
+  r.onupgradeneeded = () => r.result.createObjectStore('q', { autoIncrement: true });
+  r.onsuccess = () => ok(r.result);
+});
+async function add(x){ let d = await dbp(); d.transaction('q','readwrite').objectStore('q').add(x); }
+async function all(){ let d = await dbp(); return new Promise(ok => { let r = d.transaction('q').objectStore('q').getAll(); r.onsuccess = () => ok(r.result); }); }
+async function wipe(){ let d = await dbp(); d.transaction('q','readwrite').objectStore('q').clear(); }
+
+async function sync(){
+  if (!navigator.onLine) return;
+  const x = await all();
+  let done = 0, failed = 0;
+  for (const y of x) {
+    try {
+      if (y.formData) {
+        // offline queued photo payload: rebuild FormData
+        const fd = new FormData();
+        for (const [k, v] of Object.entries(y.fields || {})) fd.append(k, v);
+        for (const ph of (y.photos || [])) {
+          const blob = await (await fetch(ph.dataUrl)).blob();
+          fd.append('photos', blob, ph.name);
+        }
+        await fetch(y.url, { method: 'POST', body: fd });
+      } else {
+        await fetch(y.url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(y.body) });
+      }
+      done++;
+    } catch (e) { failed++; }
+  }
+  if (x.length) await wipe();
+  updateSyncState(done, failed, x.length);
+  loadTasks();
+  loadRepairs();
+}
+
+function updateSyncState(done, failed, total){
+  const el = document.getElementById('syncState');
+  if (total === 0) { el.textContent = 'Очередь пуста, все данные синхронизированы.'; return; }
+  el.textContent = `Синхронизация: отправлено ${done}, ошибок ${failed}, осталось ${total - done - failed}`;
+}
+
+function status(){
+  const el = document.getElementById('state');
+  el.textContent = navigator.onLine ? 'Онлайн · синхронизация включена' : 'Офлайн · записи и фото сохраняются на устройстве';
+  el.className = navigator.onLine ? '' : 'offline';
+}
+
+async function loadTasks(){
+  try {
+    const x = await fetch('/api/field/tasks').then(r => r.json());
+    document.getElementById('tasks').innerHTML = '<h2>План-график осмотров</h2>' + (x.length ? x.map(t => `
+      <div class="task">
+        <b>${escapeHtml(t.title)}</b>
+        <div class="meta">${new Date(t.planned_at).toLocaleString('ru')} · Приоритет ${t.priority} · <span class="pill ${t.status}">${t.status}</span></div>
+        <div class="meta">${escapeHtml(t.node_name || t.node_id || '')}</div>
+        <button onclick="finish('${t.id}')">Зафиксировать осмотр</button>
+      </div>`).join('') : '<div class="meta">Нет активных заданий</div>');
+  } catch(e) { document.getElementById('tasks').innerHTML = '<div class="meta">Задания недоступны офлайн (используйте синхронизацию)</div>'; }
+}
+
+async function loadRepairs(){
+  try {
+    const r = await fetch('/api/repairs').then(r => r.json());
+    const mine = r.filter(x => x.status !== 'done' && x.status !== 'cancelled');
+    document.getElementById('repairs').innerHTML = mine.length ? mine.slice(0, 10).map(t => `
+      <div class="task">
+        <b>${escapeHtml(t.title || t.node_name || t.id)}</b>
+        <div class="meta">Приоритет ${t.priority} · <span class="pill ${t.status}">${t.status}</span> · Бригада: ${escapeHtml(t.brigade || '—')}</div>
+        <div class="meta">План: ${t.planned_date || '—'} · Домов: ${t.affected_houses ?? '—'}</div>
+        <button onclick="updateRepair('${t.id}')">Обновить статус</button>
+      </div>`).join('') : '<div class="meta">Открытых ремонтов нет</div>';
+  } catch(e) { document.getElementById('repairs').innerHTML = '<div class="meta">Недоступно офлайн</div>'; }
+}
+
+async function updateRepair(id){
+  const st = prompt('Новый статус (in_progress / done):', 'in_progress');
+  if (!st) return;
+  try {
+    await fetch('/api/repairs/' + id, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: st }) });
+    loadRepairs();
+  } catch(e) { alert('Ошибка обновления'); }
+}
+
+async function finish(id){
+  const note = prompt('Результат осмотра / комментарий', 'Осмотр выполнен');
+  const pos = await new Promise(ok => navigator.geolocation ? navigator.geolocation.getCurrentPosition(x => ok(x.coords), () => ok({})) : ok({}));
+  const fd = new FormData();
+  fd.append('worker', 'Бригада №1');
+  fd.append('result', 'Выполнено');
+  fd.append('note', note || '');
+  fd.append('lat', pos.latitude || '');
+  fd.append('lon', pos.longitude || '');
+  if (navigator.onLine) {
+    await fetch('/api/field/tasks/' + id + '/complete', { method: 'POST', body: fd });
+  } else {
+    await add({ url: '/api/field/tasks/' + id + '/complete', formData: true, fields: Object.fromEntries(fd.entries()), photos: [] });
+    alert('Офлайн: осмотр сохранён в очереди. Будет синхронизирован при восстановлении связи.');
+  }
+  loadTasks();
+}
+
+// preview photos as data URLs so they can be queued offline
+const preview = document.getElementById('preview');
+const fileInput = f.photos;
+fileInput.addEventListener('change', () => {
+  preview.innerHTML = '';
+  for (const file of fileInput.files) {
+    const img = document.createElement('img');
+    img.className = 'thumb';
+    const rd = new FileReader();
+    rd.onload = e => { img.src = e.target.result; };
+    rd.readAsDataURL(file);
+    preview.appendChild(img);
+  }
+});
+
+f.dateObserved.value = new Date().toISOString().slice(0, 16);
+f.onsubmit = async e => {
+  e.preventDefault();
+  const fd = new FormData(f);
+  const photos = [];
+  for (const file of fd.getAll('photos')) {
+    if (typeof file === 'object' && file.size) {
+      const dataUrl = await new Promise(ok => { const rd = new FileReader(); rd.onload = () => ok(rd.result); rd.readAsDataURL(file); });
+      photos.push({ name: file.name, dataUrl });
+    }
+  }
+  if (navigator.onLine) {
+    await fetch('/api/field/defects', { method: 'POST', body: fd });
+    alert('Дефект передан диспетчеру');
+  } else {
+    await add({ url: '/api/field/defects', formData: true, fields: Object.fromEntries([...fd.entries()].filter(([,v]) => typeof v === 'string')), photos });
+    alert(`Офлайн: дефект и ${photos.length} фото добавлены в очередь`);
+  }
+  f.reset(); preview.innerHTML = '';
+};
+
+async function saveGps(){
+  const n = nodeId.value.trim();
+  if (!n) return alert('Укажите Node ID');
+  navigator.geolocation.getCurrentPosition(async p => {
+    if (navigator.onLine) {
+      await fetch('/api/field/topology-edit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ nodeId: n, lat: p.coords.latitude, lon: p.coords.longitude, note: topologyNote.value }) });
+      gps.textContent = 'Корректировка передана: ' + p.coords.latitude.toFixed(6) + ', ' + p.coords.longitude.toFixed(6);
+    } else {
+      await add({ url: '/api/field/topology-edit', body: { nodeId: n, lat: p.coords.latitude, lon: p.coords.longitude, note: topologyNote.value } });
+      gps.textContent = 'Офлайн: корректировка в очереди';
+    }
+  }, () => gps.textContent = 'GPS недоступен: проверьте разрешение устройства');
+}
+
+function escapeHtml(s){ return String(s ?? '').replace(/&/g,'&').replace(/</g,'<').replace(/>/g,'>').replace(/"/g,'"'); }
+
+addEventListener('online', () => { status(); sync(); });
+addEventListener('offline', status);
+status(); sync(); loadTasks(); loadRepairs();
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');
+</script>
+</body>
+</html>

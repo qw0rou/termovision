@@ -1,0 +1,206 @@
+<!doctype html><html lang="ru"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>КТЭК — Executive Dashboard</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+:root{--bg:#071426;--panel:#0d1f34;--panel2:#112b45;--line:#22466a;--txt:#e9f2fc;--muted:#9db5cd;--accent:#39bdf8;--ok:#22c55e;--warn:#f59e0b;--bad:#ef4444;--violet:#8b5cf6}
+*{box-sizing:border-box;margin:0}
+body{background:var(--bg);color:var(--txt);font:14px/1.45 Inter,system-ui}
+header{height:60px;display:flex;align-items:center;gap:16px;padding:0 20px;background:linear-gradient(90deg,#0a1a30,#0d2240);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:50}
+header h1{font-size:16px}
+header small{color:var(--muted)}
+nav{margin-left:auto;display:flex;gap:8px}
+nav a,nav button{background:#16324d;color:#a8dbff;border:0;padding:8px 14px;border-radius:8px;text-decoration:none;font:600 13px Inter;cursor:pointer}
+nav a:hover{background:#1d3f63}
+#userInfo{color:var(--muted);font-size:12px}
+.wrap{padding:16px;max-width:1440px;margin:0 auto}
+.grid{display:grid;gap:12px}
+.kpiRow{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+.cols{grid-template-columns:1.4fr 1fr}
+@media(max-width:1000px){.cols{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px}
+.card h2{font-size:13px;color:#a8dbff;margin-bottom:10px;text-transform:uppercase;letter-spacing:.04em}
+.card h3{font-size:12px;color:var(--muted);margin:10px 0 6px}
+.kpi{font-size:28px;font-weight:800;color:var(--accent)}
+.kpi .label{display:block;font-size:11px;color:var(--muted);font-weight:500;text-transform:uppercase;letter-spacing:.03em}
+.kpi.danger{color:var(--bad)}.kpi.warn{color:var(--warn)}.kpi.ok{color:var(--ok)}.kpi.violet{color:var(--violet)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{color:var(--muted);font-weight:600;text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);font-size:11px;text-transform:uppercase}
+td{padding:7px 8px;border-bottom:1px solid #16293f}
+tr:hover td{background:#0f2540}
+.pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:600}
+.pill.low{background:#0f3d2a;color:#4ade80}.pill.medium{background:#3d2f0a;color:#fbbf24}.pill.high{background:#3d1a0a;color:#fb923c}.pill.critical{background:#3d0a0a;color:#f87171}
+.pill.emergency{background:#3d0a0a;color:#f87171}.pill.repair{background:#2b1a4d;color:#c4b5fd}.pill.monitored{background:#3d2f0a;color:#fbbf24}.pill.normal{background:#0f3d2a;color:#4ade80}
+.row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #16293f}
+.muted{color:var(--muted)}.up{color:#4ade80}.down{color:#f87171}
+#map{height:420px;border-radius:10px;border:1px solid var(--line)}
+canvas{max-width:100%}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+.chip{background:var(--panel2);border:1px solid var(--line);padding:6px 12px;border-radius:999px;font-size:12px}
+button.act{background:linear-gradient(90deg,#1677b8,#39bdf8);color:#fff;border:0;padding:9px 16px;border-radius:8px;font-weight:700;cursor:pointer}
+button.act:hover{filter:brightness(1.1)}
+.empty{color:var(--muted);text-align:center;padding:24px;font-size:13px}
+#toast{position:fixed;bottom:20px;right:20px;background:#0a1a30;border:1px solid var(--line);color:var(--txt);padding:12px 18px;border-radius:10px;display:none;z-index:999}
+</style>
+</head><body>
+<header>
+  <h1>📊 КТЭК · Executive Dashboard</h1>
+  <small>Аналитическая сводка тепловой сети г. Костанай</small>
+  <nav>
+    <a href="/">Карта</a>
+    <a href="field.html">Бригада</a>
+    <a href="admin.html">Администратор</a>
+    <a href="login.html">Вход</a>
+  </nav>
+  <span id="userInfo"></span>
+</header>
+<div class="wrap">
+  <div class="grid kpiRow" id="kpis"></div>
+
+  <div class="grid cols" style="margin-top:14px">
+    <div>
+      <div class="card">
+        <h2>Карта рисков сети</h2>
+        <div id="map"></div>
+        <div class="chips">
+          <span class="chip">🟢 низкий</span><span class="chip">🟡 средний</span><span class="chip">🟠 высокий</span><span class="chip">🔴 критический</span>
+        </div>
+      </div>
+      <div class="card" style="margin-top:12px">
+        <h2>Динамика аварийности (12 мес)</h2>
+        <canvas id="trend" height="170"></canvas>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <h2>Топ-20 рискованных участков</h2>
+        <table id="riskTable"><tr><th>Объект</th><th>Аварии</th><th>Дефекты</th><th>Риск</th></tr></table>
+      </div>
+      <div class="card" style="margin-top:12px">
+        <h2>Текущие аномалии</h2>
+        <div id="anomalies"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid cols" style="margin-top:14px">
+    <div class="card">
+      <h2>Аварийность по районам</h2>
+      <table id="districtTable"></table>
+    </div>
+    <div class="card">
+      <h2>Плановые ремонты (открытые)</h2>
+      <table id="repairTable"><tr><th>Объект</th><th>Приоритет</th><th>Статус</th><th>Дата</th></tr></table>
+    </div>
+  </div>
+
+  <div class="grid cols" style="margin-top:14px">
+    <div class="card">
+      <h2>Транспорт (GPS)</h2>
+      <table id="fleetTable"><tr><th>Машина</th><th>Статус</th><th>Координаты</th><th>Источник</th></tr></table>
+    </div>
+    <div class="card">
+      <h2>Теплосчётчики</h2>
+      <div id="metersInfo" class="empty">Загрузка…</div>
+      <h3>Аномальное потребление</h3>
+      <div id="consumptionList"></div>
+    </div>
+  </div>
+</div>
+<div id="toast"></div>
+<script>
+const api={g:p=>fetch('/api/'+p).then(r=>r.json())};
+const $=id=>document.getElementById(id);
+const fmt=v=>v==null||v===''?'—':v;
+let riskMap=null, riskLayer=null;
+
+function toast(msg){const t=$('toast');t.textContent=msg;t.style.display='block';setTimeout(()=>t.style.display='none',4000)}
+
+function ensureRiskMap(){
+  if(riskMap) return;
+  riskMap=L.map('map').setView([53.214,63.63],12);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OSM'}).addTo(riskMap);
+}
+
+async function load(){
+  const [d,risk,repairs,fleet,meters,cons]=await Promise.all([
+    api.g('dashboard'),api.g('analytics/risk?limit=100'),api.g('repairs'),
+    api.g('fleet'),api.g('meters'),api.g('analytics/consumption')
+  ]);
+  const k=d.kpis;
+  $('kpis').innerHTML=[
+    [k.houses,'потребителей',''],
+    [k.nodes,'узлов',''],
+    [k.pipes,'участков',''],
+    [k.activeBursts,'активных аварий','danger'],
+    [k.openDefects,'дефектов','warn'],
+    [k.openRepairs,'ремонтов','violet'],
+    [k.affectedConsumers,'затронуто сейчас','danger'],
+    [k.highRiskNodes,'высокий риск','warn']
+  ].map(([v,label,cls])=>`<div class="card"><div class="kpi ${cls||''}">${v}<span class="label">${label}</span></div></div>`).join('');
+
+  const lvl={low:['Низкий','low'],medium:['Средний','medium'],high:['Высокий','high'],critical:['Критический','critical']};
+  $('riskTable').innerHTML='<tr><th>Объект</th><th>Аварии</th><th>Дефекты</th><th>Риск</th></tr>'+risk.slice(0,20).map(r=>`<tr><td><a href="/#node:${r.id}" style="color:#7dd3fc">${r.name}</a></td><td>${r.bursts}</td><td>${r.defects}</td><td><span class="pill ${r.level}">${r.score} · ${lvl[r.level][0]}</span></td></tr>`).join('');
+
+  $('anomalies').innerHTML=d.anomalies.length? d.anomalies.map(a=>`<div class="row"><span>⚠️ ${a.nodeName}</span><span class="down">${a.key} ${a.value}</span></div>`).join('') : '<div class="empty">Отклонений нет</div>';
+
+  $('districtTable').innerHTML='<tr><th>Район</th><th>Узлов</th><th>Аварии</th><th>Дефекты</th></tr>'+d.districts.slice(0,12).map(x=>`<tr><td>${x.district||'Не указан'}</td><td>${x.nodes}</td><td class="down">${x.bursts}</td><td>${x.defects}</td></tr>`).join('');
+
+  const prio={1:['Низкий','low'],5:['Средний','medium'],8:['Высокий','high'],10:['Аварийный','critical']};
+  $('repairTable').innerHTML='<tr><th>Объект</th><th>Приоритет</th><th>Статус</th><th>Дата</th></tr>'+repairs.filter(r=>r.status!=='done'&&r.status!=='cancelled').slice(0,10).map(r=>`<tr><td>${r.title||r.node_name||r.id}</td><td><span class="pill ${(prio[r.priority]||['Средний','medium'])[1]}">${(prio[r.priority]||['Средний','medium'])[0]}</span></td><td>${r.status}</td><td>${fmt(String(r.planned_date||'').slice(0,10))}</td></tr>`).join('')||'<tr><td colspan=4 class=empty>Нет открытых ремонтов</td></tr>';
+
+  const st={available:['Доступна','ok'],on_route:['В пути','warn'],working:['Работает','danger']};
+  $('fleetTable').innerHTML='<tr><th>Машина</th><th>Статус</th><th>Координаты</th><th>Источник</th></tr>'+fleet.map(v=>`<tr><td>${v.name}</td><td><span class="pill ${(st[v.status]||['—',''])[1]}">${(st[v.status]||[v.status])[0]}</span></td><td>${v.lat.toFixed(4)}, ${v.lon.toFixed(4)}</td><td class="muted">${v.source==='mock'?'симуляция':'API'}</td></tr>`).join('');
+
+  $('metersInfo').innerHTML=`<div class="row"><span>Приборов учёта</span><b>${meters.meters.length}</b></div><div class="row"><span>Источник данных</span><b class="${meters.simulated?'warn':''}">${meters.simulated?'симуляция до интеграции':'реальная БД'}</b></div>`;
+  $('consumptionList').innerHTML=(cons.analytics.anomalous||[]).slice(0,8).map(a=>`<div class="row"><span>${a.house}</span><span class="${a.deviation>0?'up':'down'}">${a.deviation>0?'+':''}${a.deviation}%</span></div>`).join('')||'<div class="empty">Аномалий потребления не выявлено</div>';
+
+  drawTrend(d.timeline);
+  ensureRiskMap();
+  drawRiskMap(risk);
+}
+
+function drawRiskMap(risk){
+  ensureRiskMap();
+  if(riskLayer){riskMap.removeLayer(riskLayer);riskLayer=null;}
+  const colors={low:'#22c55e',medium:'#f59e0b',high:'#f97316',critical:'#ef4444'};
+  const fc=risk.map(r=>({type:'Feature',properties:r,geometry:{type:'Point',coordinates:[r.lon||63.63,r.lat||53.214]}}));
+  riskLayer=L.geoJSON({type:'FeatureCollection',features:fc},{pointToLayer:(f,p)=>L.circleMarker(p,{radius:f.properties.level==='critical'?9:6,color:colors[f.properties.level]||'#64748b',fillOpacity:.8}),onEachFeature:(f,layer)=>layer.bindPopup(`<b>${f.properties.name}</b><br>Риск: ${f.properties.score} (${f.properties.level})<br>Порывы: ${f.properties.bursts} · Дефекты: ${f.properties.defects}`)});
+  riskMap.addLayer(riskLayer);
+  if(!riskMap._riskFitted){riskMap.fitBounds(riskLayer.getBounds(),{padding:[20,20]});riskMap._riskFitted=true;}
+}
+
+function drawTrend(t){
+  const c=$('trend'),x=c.getContext('2d');
+  const w=c.width=c.offsetWidth*2,h=c.height*2;x.scale(2,2);x.clearRect(0,0,w,h);
+  const vals=t.map(v=>v.total),max=Math.max(1,...vals);
+  const pad=30,bw=(c.offsetWidth-pad*2)/vals.length;
+  const grad=x.createLinearGradient(0,0,0,300);grad.addColorStop(0,'rgba(57,189,248,.35)');grad.addColorStop(1,'rgba(57,189,248,0)');
+  x.fillStyle='#0a1a30';x.fillRect(0,0,c.offsetWidth,200);
+  x.strokeStyle='#22466a';x.lineWidth=1;
+  for(let i=0;i<=4;i++){const y=pad+(160-pad)*i/4;x.beginPath();x.moveTo(0,y);x.lineTo(c.offsetWidth,y);x.stroke();x.fillStyle='#5a7a9a';x.font='10px Inter';x.fillText(Math.round(max*(1-i/4)),4,y+3)}
+  vals.forEach((v,i)=>{
+    const bh=(160-pad)*v/max;
+    x.fillStyle=v>0?'#39bdf8':'#1d3f63';
+    x.fillRect(pad+i*bw+2,160-bh,bw-4,bh);
+    x.fillStyle='#5a7a9a';x.fillText(t[i].month,pad+i*bw,172);
+  });
+}
+
+
+async function init(){
+  const s=await api.g('auth/session');
+  if(s.user)$('userInfo').textContent=`👤 ${s.user.name} · ${s.user.roleId}`;
+  load();
+}
+init();
+setInterval(load,60000);
+
+// Dynamic risk map is already via /api/map/risk; add click-to-dispatch on lines
+document.addEventListener('click', function(e){
+  const a = e.target.closest('a[href^="/#node:"]');
+  if(a){ e.preventDefault(); const id = a.getAttribute('href').split(':')[1]; location.href = '/#/' + id; }
+});
+</script>
+</body></html>

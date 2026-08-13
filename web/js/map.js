@@ -2,7 +2,50 @@ let map, layers = {nodes: null, pipes: null}, selection = [];
 let selectedTarget = null; // {type:'node'|'pipe', id, name}
 let previewSelection = [];
 
-const color = {normal: '#22c55e', monitored: '#f59e0b', emergency: '#ef4444', repair: '#8b5cf6'};
+const color = {normal: '#22c55e', monitored: '#f59e0b', emergency: '#ef4444', repair: '#8b5cf6', data_missing: '#94a3b8', high_risk: '#f97316'};
+const globalFilterState = {type: 'all', status: 'all', district: 'all'};
+window.layers = layers;
+window.globalFilterState = globalFilterState;
+function setFilterState(nextState){ Object.assign(globalFilterState, nextState); if(typeof applyMapFilters === 'function') applyMapFilters(); }
+window.setFilterState = setFilterState;
+function layerMatchesFilter(kind, props){
+	const type = globalFilterState.type;
+	const status = globalFilterState.status;
+	const district = globalFilterState.district;
+	if(type !== 'all'){
+		if(kind === 'node'){
+			const allowed = type === 'node' || (type === 'source' && (props.type === 'Источник' || props.type === 'source'));
+			if(!allowed) return false;
+		} else if(type !== kind) return false;
+	}
+	if(status !== 'all' && String(props.status || 'normal') !== status) return false;
+	if(district !== 'all'){
+		const value = String((props.district || props.folder || props.area || '') || '').toLowerCase();
+		if(!value || value !== String(district).toLowerCase()) return false;
+	}
+	return true;
+}
+function applyMapFilters(){
+	if(!map) return;
+	const groups = [
+		{layer: layers.pipes, kind: 'pipe'},
+		{layer: layers.nodes, kind: 'node'},
+		{layer: layers.social, kind: 'social'}
+	];
+	groups.forEach(({layer, kind}) => {
+		if(!layer || !layer.eachLayer) return;
+		layer.eachLayer(item => {
+			const props = item.feature && item.feature.properties ? item.feature.properties : {};
+			const visible = layerMatchesFilter(kind, props);
+			if(item.setStyle){
+				const base = item.options && item.options.style ? item.options.style : {};
+				item.setStyle({opacity: visible ? 1 : 0.08, fillOpacity: visible ? (base.fillOpacity ?? 0.9) : 0.04, weight: visible ? (base.weight ?? 2) : 0});
+			} else {
+				item.setOpacity ? item.setOpacity(visible ? 1 : 0.08) : null;
+			}
+		});
+	});
+}
 
 function initMap() {
 	map = L.map('map').setView([53.214, 63.63], 12);
@@ -34,17 +77,19 @@ function initMap() {
 				}
 			}).addTo(map);
 
-		layers.houses = L.geoJSON(h, {
-			pointToLayer: (f, ll) => L.circleMarker(ll, {radius: 3, color: '#0ea5e9', fillOpacity: .8}),
+		window.layers = layers;
+		layers.social = L.geoJSON(m.socialObjects || {type:'FeatureCollection', features: []}, {
+			pointToLayer: (f, ll) => L.circleMarker(ll, {radius: 6, color: '#38bdf8', fillOpacity: .92, weight: 2}),
 			onEachFeature: (f, l) => {
-				l.bindPopup(`<b>Дом</b><br>${f.properties.street || ''} ${f.properties.house || ''}`);
-				l.on('click', ()=>{ if(f.properties && f.properties.id) showHousePassport(f.properties.id); });
+				l.bindPopup(`<b>${f.properties.name || 'Социальный объект'}</b><br>Тип: ${f.properties.type || '—'}<br>Адрес: ${f.properties.address || '—'}<br>Статус: ${f.properties.status || 'normal'}`);
 			}
 		}).addTo(map);
 
+		applyMapFilters();
+
 		// Fit bounds to nodes, pipes and houses
 		try {
-			const group = L.featureGroup([layers.nodes, layers.pipes, layers.houses]);
+			const group = L.featureGroup([layers.nodes, layers.pipes]);
 			const bounds = group.getBounds();
 			if (bounds.isValid()) map.fitBounds(bounds, {padding: [20, 20]});
 			else if (layers.nodes && layers.nodes.getBounds) map.fitBounds(layers.nodes.getBounds(), {padding: [20, 20]});
@@ -87,6 +132,27 @@ function startTelemetryPolling(intervalMs = 15000){
 
 startTelemetryPolling(15000);
 
+function showNearbyHouseList(houses, title = 'Прилежащие дома') {
+	const items = Array.isArray(houses) ? houses : [];
+	if(!items.length) return;
+	let modal = document.getElementById('nearby-house-list');
+	if(!modal){
+		modal = document.createElement('div');
+		modal.id = 'nearby-house-list';
+		modal.style.position='fixed'; modal.style.right='20px'; modal.style.top='84px'; modal.style.width='360px'; modal.style.maxHeight='80vh'; modal.style.overflow='auto';
+		modal.style.background='#091827'; modal.style.border='1px solid #29445f'; modal.style.padding='12px'; modal.style.borderRadius='8px'; modal.style.zIndex=99999; modal.style.color='#e9f2fc';
+		document.body.appendChild(modal);
+	}
+	const rows = items.slice(0, 60).map(h => {
+		const address = [h.street, h.house, h.block].filter(Boolean).join(' ') || h.id || 'Дом';
+		const year = h.year ? ` • ${h.year}` : '';
+		return `<div style="padding:8px 6px;border-bottom:1px solid #18314d"><button data-house-id="${h.id}" style="background:#18314d;color:#e9f2fc;border:0;padding:8px;border-radius:6px;width:100%;text-align:left;margin:0">${address}${year}</button></div>`;
+	}).join('');
+	modal.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><strong>${title}</strong><button id="nh-close" style="background:#16324d;color:#a8dbff;border:0;padding:6px;border-radius:6px">Закрыть</button></div><div>${rows}</div>`;
+	modal.querySelector('#nh-close').onclick = () => modal.remove();
+	modal.querySelectorAll('[data-house-id]').forEach(btn => btn.onclick = () => showHousePassport(btn.getAttribute('data-house-id')));
+}
+
 function selectNode(id, name) {
 	document.querySelector('#selected').textContent = name;
 	api.post('outage-zone', {nodeId: id}).then(z => {
@@ -113,7 +179,12 @@ function selectNode(id, name) {
 
 		document.querySelector('#zone').innerHTML = `<b>${z.houses.length}</b> потребителей в зоне<br><small>${z.nodeIds.length} узлов, ${z.pipeIds.length} участков</small>`;
 		return api.get('trail/' + id);
-	}).then(t => document.querySelector('#trail').innerHTML = [...t.bursts.map(x => `💥 ${x.status}: ${x.defect_char || x.address || '—'}`), ...t.defects.map(x => `🔧 P${x.priority}: ${x.defect_type}`)].slice(0, 8).join('<br>') || 'История отсутствует')
+	}).then(t => {
+		document.querySelector('#trail').innerHTML = [...t.bursts.map(x => `💥 ${x.status}: ${x.defect_char || x.address || '—'}`), ...t.defects.map(x => `🔧 P${x.priority}: ${x.defect_type}`)].slice(0, 8).join('<br>') || 'История отсутствует';
+		return api.get('passports/node/' + id);
+	}).then(r => {
+		if (Array.isArray(r.houses) && r.houses.length) showNearbyHouseList(r.houses, 'Прилежащие дома');
+	}).catch(e => console.error('selectNode detail failed', e));
 }
 
 // House passport modal
@@ -140,6 +211,7 @@ function showHousePassport(id){
 		rows.push(`<div class="row"><b>TK:</b> ${h.tk||'—'}</div>`);
 		rows.push(`<div class="row"><b>Узел:</b> ${node? (node.name+' ('+node.id+')') : '—'}</div>`);
 		rows.push(`<div class="row"><b>Потребление (поля):</b> ${h.load||'—'}</div>`);
+		rows.push(`<div class="row"><b>Год:</b> ${h.year || '—'}</div>`);
 		rows.push(`<div class="row"><b>Владелец:</b> ${h.owner||'—'}</div>`);
 		rows.push(`<div class="row"><b>Примечание:</b> ${h.note||'—'}</div>`);
 		rows.push(`<div class="row"><b>История (порывы/дефекты):</b><div>${history.slice(0,8).map(x=>`<div style="margin-top:6px">${x.date_detected||x.date_observed||''} — ${x.defect_char||x.defect_type||x.address||''}</div>`).join('')}</div></div>`);
