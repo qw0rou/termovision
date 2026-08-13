@@ -1,0 +1,225 @@
+╔════════════════════════════════════════════════════════════════════════════╗
+║                                                                            ║
+║                   🔥 HEATNET QUICK REFERENCE GUIDE 🔥                     ║
+║                                                                            ║
+║                    Information-Analytical Platform for                    ║
+║                   Heat Network Monitoring & Dispatch (KTEK)              ║
+║                                                                            ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+⚡ START (Copy & Paste)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+cd /workspaces/termovision
+npm install
+npm run import-all
+npm start
+
+Then open your browser to: http://localhost:4000
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎬 MAIN PAGES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Dashboard      http://localhost:4000/dashboard.html    Executive KPI panel
+Map           http://localhost:4000/index.html        GIS visualization
+Mobile        http://localhost:4000/mobile.html       Field worker app
+Login         http://localhost:4000/login.html        Authentication
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+👥 DEMO ACCOUNTS (Password: Demo123!)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+dispatcher@demo.local    Dispatcher (view all data)
+engineer@demo.local      Engineer (technical view)
+field@demo.local         Field worker (mobile focus)
+manager@demo.local       Manager (oversight)
+admin@demo.local         Admin (full access)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔗 KEY API ENDPOINTS (Testing with curl)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Dashboard:
+curl http://localhost:4000/api/dashboard
+
+Map (GeoJSON):
+curl http://localhost:4000/api/map
+
+Risk Scores (top 20):
+curl "http://localhost:4000/api/analytics/risk?limit=20"
+
+Mobile Tasks:
+curl http://localhost:4000/api/mobile/tasks
+
+System Health:
+curl http://localhost:4000/health
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📊 NETWORK STATISTICS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Nodes:     433
+Pipes:     782
+Houses:    6,455
+People:    ~16,000
+Critical:  12 facilities
+Bursts:    430 (history)
+Defects:   192 (current)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📚 DOCUMENTATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+README.md                   Full setup guide, API reference, features
+PROJECT_SUMMARY.md          Architecture, components, roadmap
+QUICKSTART_DEMO.md          5 complete demo scenarios with scripts
+IMPLEMENTATION_LOG.md       What was built, changes made, verification
+CHECKLIST_FINAL.md          Pre-demo verification checklist
+QUICK_REFERENCE.txt         This file!
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎯 5 DEMO SCENARIOS (15 minutes total)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Dashboard (2 min)
+   Open: http://localhost:4000/dashboard.html
+   Show: KPI cards, trends, risk distribution
+
+2. Map & Simulation (5 min)
+   Open: http://localhost:4000/index.html
+   Click: Any red node → detail → "Simulate Outage"
+   Show: Affected area, critical facilities, impact
+
+3. Mobile App (4 min)
+   Open: http://localhost:4000/mobile.html
+   Select: Any task → fill checklist → add photo → save
+
+4. Offline Mode (2 min)
+   F12 → Network → Offline
+   Complete form, save
+   F12 → Network → Online
+   See auto-sync message
+
+5. Analytics (2 min)
+   Open: http://localhost:4000/api/analytics/risk
+   Explain: Risk scoring, top nodes, factors
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🛠️ TROUBLESHOOTING
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Port 4000 already in use:
+  lsof -i :4000
+  kill -9 <PID>
+  npm start
+
+Database corrupted:
+  rm server/db/heatnet.sqlite*
+  npm run import-all
+  npm start
+
+Map not loading:
+  Check browser console (F12)
+  Verify OpenStreetMap is accessible
+  Try hard refresh (Ctrl+Shift+R)
+
+Mobile offline not working:
+  F12 → Storage → IndexedDB → Check if data there
+  Try F12 → Network → "Offline" toggle
+  Check browser privacy mode
+
+API returns 401/403:
+  Check if logged in: http://localhost:4000/api/session
+  Verify user role has permission
+  Try demo account
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+⚙️ PROJECT STRUCTURE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+/server
+  ├── db.js                Database setup (25+ tables)
+  ├── index.js             Express server entry
+  ├── routes/api.js        30+ API endpoints
+  ├── lib/
+  │   ├── network.js       Topology engine (BFS)
+  │   ├── analytics.js     Risk scoring
+  │   ├── auth.js          Authentication
+  │   └── ...other libs
+  └── scripts/
+      ├── import-all       Master import script
+      └── seed-demo.js     Demo data generator
+
+/web
+  ├── index.html          GIS Map
+  ├── dashboard.html      Executive Dashboard
+  ├── mobile.html         Field Worker PWA
+  ├── js/                 JavaScript components
+  └── sw.js              Service Worker (offline)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📋 COMMANDS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+npm install              Install dependencies
+npm start                Start server (localhost:4000)
+npm run import-all       Load all data (network, houses, defects)
+node server/scripts/seed-demo.js   Generate demo data
+npm test                 Run tests
+npm run build            Build for production
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✨ KEY FEATURES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ Digital Twin         Model of 433 nodes + 782 pipes
+✅ GIS Map             Leaflet + OpenStreetMap visualization
+✅ Outage Simulation    Calculate affected area & consumers
+✅ Risk Scoring         Top 100 nodes by risk
+✅ Dashboard           14+ KPI metrics with trends
+✅ Mobile PWA          Field operations (offline-capable)
+✅ GPS Tracking        Geolocation for field workers
+✅ Offline Sync        IndexedDB + auto-sync
+✅ Incident Mgmt       Bursts, defects, repairs
+✅ RBAC                5 roles with proper access control
+✅ Audit Logging       All critical actions tracked
+✅ API First           30+ REST endpoints
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+⚠️ IMPORTANT NOTES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+• System does NOT control equipment (valves, pumps, etc.)
+• Purely informational and analytical platform
+• Dispatcher makes all operational decisions
+• Mock integrations (GPS, telemetry) for demo
+• SQLite for MVP (PostgreSQL for production)
+• Works offline-first for mobile operations
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📞 GETTING HELP
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Read README.md
+2. Check QUICKSTART_DEMO.md for demo scenarios
+3. Review inline code comments
+4. Check browser console (F12) for errors
+5. Try demo with sample account
+
+═══════════════════════════════════════════════════════════════════════════════
+
+                        🚀 READY FOR DEMONSTRATION! 🚀
+
+                     All Systems Operational & Verified
+
+                           Status: ✅ PRODUCTION MVP
+
+═══════════════════════════════════════════════════════════════════════════════
+
+Generated: August 13, 2026
+Version: 0.1.0
+Client: ГКП "КТЭК", Kostanay
+Region: мкр. "Юбилейный"
+
