@@ -6,7 +6,7 @@
 <style>
 :root{--bg:#071426;--panel:#0d1f34;--panel2:#112b45;--line:#22466a;--txt:#e9f2fc;--muted:#9db5cd;--accent:#39bdf8;--ok:#22c55e;--warn:#f59e0b;--bad:#ef4444;--violet:#8b5cf6}
 *{box-sizing:border-box;margin:0}
-body{background:var(--bg);color:var(--txt);font:14px/1.45 Inter,system-ui}
+body{background:var(--bg);color:var(--txt);font:14px/1.45 Inter,system-ui;overflow-x:hidden}
 header{height:60px;display:flex;align-items:center;gap:16px;padding:0 20px;background:linear-gradient(90deg,#0a1a30,#0d2240);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:50}
 header h1{font-size:16px}
 header small{color:var(--muted)}
@@ -14,7 +14,7 @@ nav{margin-left:auto;display:flex;gap:8px}
 nav a,nav button{background:#16324d;color:#a8dbff;border:0;padding:8px 14px;border-radius:8px;text-decoration:none;font:600 13px Inter;cursor:pointer}
 nav a:hover{background:#1d3f63}
 #userInfo{color:var(--muted);font-size:12px}
-.wrap{padding:16px;max-width:1440px;margin:0 auto}
+.wrap{padding:16px;max-width:1440px;margin:0 auto;height:calc(100vh - 60px);overflow:auto;scrollbar-gutter:stable both-edges}
 .grid{display:grid;gap:12px}
 .kpiRow{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
 .cols{grid-template-columns:1.4fr 1fr}
@@ -34,9 +34,9 @@ tr:hover td{background:#0f2540}
 .pill.emergency{background:#3d0a0a;color:#f87171}.pill.repair{background:#2b1a4d;color:#c4b5fd}.pill.monitored{background:#3d2f0a;color:#fbbf24}.pill.normal{background:#0f3d2a;color:#4ade80}
 .row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #16293f}
 .muted{color:var(--muted)}.up{color:#4ade80}.down{color:#f87171}
-#map{height:420px;border-radius:10px;border:1px solid var(--line)}
+#map{height:500px;width:100%;border-radius:10px;border:1px solid var(--line);overflow:auto}
 canvas{max-width:100%}
-.chips{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0;overflow-y:auto;height:auto}
 .chip{background:var(--panel2);border:1px solid var(--line);padding:6px 12px;border-radius:999px;font-size:12px}
 button.act{background:linear-gradient(90deg,#1677b8,#39bdf8);color:#fff;border:0;padding:9px 16px;border-radius:8px;font-weight:700;cursor:pointer}
 button.act:hover{filter:brightness(1.1)}
@@ -66,6 +66,7 @@ button.act:hover{filter:brightness(1.1)}
         <div class="chips">
           <span class="chip">🟢 низкий</span><span class="chip">🟡 средний</span><span class="chip">🟠 высокий</span><span class="chip">🔴 критический</span>
         </div>
+        <!-- Убрана визуализация социальных объектов -->
       </div>
       <div class="card" style="margin-top:12px">
         <h2>Динамика аварийности (12 мес)</h2>
@@ -115,12 +116,104 @@ const $=id=>document.getElementById(id);
 const fmt=v=>v==null||v===''?'—':v;
 let riskMap=null, riskLayer=null;
 
+// Initialize map interaction tools
+let drawMode = false;
+let drawType = 'node'; // 'node' or 'pipe'
+let tempFeatures = [];
+
 function toast(msg){const t=$('toast');t.textContent=msg;t.style.display='block';setTimeout(()=>t.style.display='none',4000)}
 
 function ensureRiskMap(){
   if(riskMap) return;
   riskMap=L.map('map').setView([53.214,63.63],12);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OSM'}).addTo(riskMap);
+  setupDrawListeners();
+}
+
+// Draw mode controls
+function toggleDrawMode(type){
+  drawMode = true;
+  drawType = type;
+  tempFeatures = [];
+  const chips = document.querySelectorAll('.chip');
+  chips.forEach(c => c.classList.remove('active'));
+  const trigger = typeof event !== 'undefined' ? event.target : null;
+  trigger?.classList.add('active');
+  toast(`Режим рисования: ${type === 'node' ? 'Узел' : 'Участок'}`);
+
+  if (riskMap) {
+    riskMap.on('click', function(e){
+      if(!drawMode) return;
+      addTempFeature(e.latlng);
+    });
+  }
+}
+
+function cancelDraw(){
+  drawMode = false;
+  tempFeatures = [];
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  toast('Рисование отменено');
+}
+
+function addTempFeature(latlng){
+  if(drawType === 'node'){
+    const marker = L.marker(latlng).addTo(riskMap);
+    marker.bindPopup('<b>Новый узел</b><br>Кликните для настроек');
+    tempFeatures.push({type: 'node', layer: marker, latlng});
+  } else if(drawType === 'pipe'){
+    if(tempFeatures.length === 0){
+      tempFeatures.push({type: 'pipe', start: latlng, points: [latlng]});
+      toast('Кликните вторую точку для создания участка');
+    } else if(tempFeatures.length === 1){
+      const start = tempFeatures[0].latlng;
+      const end = latlng;
+      const coords = [[start.lng, start.lat], [end.lng, end.lat]];
+      const pipe = L.polyline(coords, {color: '#39bdf8', opacity: 0.5}).addTo(riskMap);
+      tempFeatures.push({type: 'pipe', layer: pipe});
+      drawMode = false;
+      document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+      toast('Участок добавлен');
+    }
+  }
+}
+
+// Event listener for map clicks during draw mode
+function setupDrawListeners(){
+  if(!riskMap) return;
+  if(riskMap.__drawListening) return;
+  riskMap.__drawListening = true;
+  riskMap.on('click', e => {
+    if(!drawMode) return;
+    addTempFeature(e.latlng);
+  });
+}
+
+function drawRiskMap(risk){
+  ensureRiskMap();
+  if(riskLayer){riskMap.removeLayer(riskLayer);riskLayer=null;}
+  const colors={low:'#22c55e',medium:'#f59e0b',high:'#f97316',critical:'#ef4444'};
+  const fc=risk.map(r=>({type:'Feature',properties:r,geometry:{type:'Point',coordinates:[r.lon||63.63,r.lat||53.214]}}));
+  riskLayer=L.geoJSON({type:'FeatureCollection',features:fc},{pointToLayer:(f,p)=>L.circleMarker(p,{radius:f.properties.level==='critical'?9:6,color:colors[f.properties.level]||'#64748b',fillOpacity:.8}),onEachFeature:(f,layer)=>layer.bindPopup(`<b>${f.properties.name}</b><br>Риск: ${f.properties.score} (${f.properties.level})<br>Порывы: ${f.properties.bursts} · Дефекты: ${f.properties.defects}`)});
+  riskMap.addLayer(riskLayer);
+  if(!riskMap._riskFitted){riskMap.fitBounds(riskLayer.getBounds(),{padding:[20,20]});riskMap._riskFitted=true;}
+}
+
+function drawTrend(t){
+  const c=$('trend'),x=c.getContext('2d');
+  const w=c.width=c.offsetWidth*2,h=c.height*2;x.scale(2,2);x.clearRect(0,0,w,h);
+  const vals=t.map(v=>v.total),max=Math.max(1,...vals);
+  const pad=30,bw=(c.offsetWidth-pad*2)/vals.length;
+  const grad=x.createLinearGradient(0,0,0,300);grad.addColorStop(0,'rgba(57,189,248,.35)');grad.addColorStop(1,'rgba(57,189,248,0)');
+  x.fillStyle='#0a1a30';x.fillRect(0,0,c.offsetWidth,200);
+  x.strokeStyle='#22466a';x.lineWidth=1;
+  for(let i=0;i<=4;i++){const y=pad+(160-pad)*i/4;x.beginPath();x.moveTo(0,y);x.lineTo(c.offsetWidth,y);x.stroke();x.fillStyle='#5a7a9a';x.font='10px Inter';x.fillText(Math.round(max*(1-i/4)),4,y+3)}
+  vals.forEach((v,i)=>{
+    const bh=(160-pad)*v/max;
+    x.fillStyle=v>0?'#39bdf8':'#1d3f63';
+    x.fillRect(pad+i*bw+2,160-bh,bw-4,bh);
+    x.fillStyle='#5a7a9a';x.fillText(t[i].month,pad+i*bw,172);
+  });
 }
 
 async function load(){
@@ -161,46 +254,43 @@ async function load(){
   drawRiskMap(risk);
 }
 
-function drawRiskMap(risk){
-  ensureRiskMap();
-  if(riskLayer){riskMap.removeLayer(riskLayer);riskLayer=null;}
-  const colors={low:'#22c55e',medium:'#f59e0b',high:'#f97316',critical:'#ef4444'};
-  const fc=risk.map(r=>({type:'Feature',properties:r,geometry:{type:'Point',coordinates:[r.lon||63.63,r.lat||53.214]}}));
-  riskLayer=L.geoJSON({type:'FeatureCollection',features:fc},{pointToLayer:(f,p)=>L.circleMarker(p,{radius:f.properties.level==='critical'?9:6,color:colors[f.properties.level]||'#64748b',fillOpacity:.8}),onEachFeature:(f,layer)=>layer.bindPopup(`<b>${f.properties.name}</b><br>Риск: ${f.properties.score} (${f.properties.level})<br>Порывы: ${f.properties.bursts} · Дефекты: ${f.properties.defects}`)});
-  riskMap.addLayer(riskLayer);
-  if(!riskMap._riskFitted){riskMap.fitBounds(riskLayer.getBounds(),{padding:[20,20]});riskMap._riskFitted=true;}
-}
-
-function drawTrend(t){
-  const c=$('trend'),x=c.getContext('2d');
-  const w=c.width=c.offsetWidth*2,h=c.height*2;x.scale(2,2);x.clearRect(0,0,w,h);
-  const vals=t.map(v=>v.total),max=Math.max(1,...vals);
-  const pad=30,bw=(c.offsetWidth-pad*2)/vals.length;
-  const grad=x.createLinearGradient(0,0,0,300);grad.addColorStop(0,'rgba(57,189,248,.35)');grad.addColorStop(1,'rgba(57,189,248,0)');
-  x.fillStyle='#0a1a30';x.fillRect(0,0,c.offsetWidth,200);
-  x.strokeStyle='#22466a';x.lineWidth=1;
-  for(let i=0;i<=4;i++){const y=pad+(160-pad)*i/4;x.beginPath();x.moveTo(0,y);x.lineTo(c.offsetWidth,y);x.stroke();x.fillStyle='#5a7a9a';x.font='10px Inter';x.fillText(Math.round(max*(1-i/4)),4,y+3)}
-  vals.forEach((v,i)=>{
-    const bh=(160-pad)*v/max;
-    x.fillStyle=v>0?'#39bdf8':'#1d3f63';
-    x.fillRect(pad+i*bw+2,160-bh,bw-4,bh);
-    x.fillStyle='#5a7a9a';x.fillText(t[i].month,pad+i*bw,172);
-  });
-}
-
-
-async function init(){
-  const s=await api.g('auth/session');
-  if(s.user)$('userInfo').textContent=`👤 ${s.user.name} · ${s.user.roleId}`;
-  load();
-}
-init();
-setInterval(load,60000);
-
-// Dynamic risk map is already via /api/map/risk; add click-to-dispatch on lines
+// Initialize draw mode listeners after map is ensured
 document.addEventListener('click', function(e){
   const a = e.target.closest('a[href^="/#node:"]');
   if(a){ e.preventDefault(); const id = a.getAttribute('href').split(':')[1]; location.href = '/#/' + id; }
+});
+
+// Initialize draw mode UI
+document.addEventListener('DOMContentLoaded', function() {
+  const drawNodeBtn = document.getElementById('drawNodeBtn');
+  const drawPipeBtn = document.getElementById('drawPipeBtn');
+  const cancelDrawBtn = document.getElementById('cancelDrawBtn');
+
+  if (drawNodeBtn) {
+    drawNodeBtn.style.display = 'inline-block';
+    drawNodeBtn.onclick = () => toggleDrawMode('node');
+  }
+  if (drawPipeBtn) {
+    drawPipeBtn.style.display = 'inline-block';
+    drawPipeBtn.onclick = () => toggleDrawMode('pipe');
+  }
+  if (cancelDrawBtn) {
+    cancelDrawBtn.style.display = 'inline-block';
+    cancelDrawBtn.onclick = cancelDraw;
+document.addEventListener('DOMContentLoaded', function(){
+  const mapDiv = document.getElementById('map');
+  if(!mapDiv.__drawControlsInit){
+    mapDiv.__drawControlsInit = true;
+    const controlsHtml = `
+      <div id="drawControls" style="position:absolute; top:100px; left:10px; background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:8px; z-index:100; font-size:12px;">
+        <div style="margin-bottom:8px; font-weight:bold; color:var(--txt);">Режим рисования</div>
+        <button onclick="toggleDrawMode('node')" style="width:100%; margin:2px 0; padding:4px; background:#3b82f6; color:white; border:none; border-radius:4px; cursor:pointer;">Узел</button>
+        <button onclick="toggleDrawMode('pipe')" style="width:100%; margin:2px 0; padding:4px; background:#1d4ed8; color:white; border:none; border-radius:4px; cursor:pointer;">Участок</button>
+        <button onclick="cancelDraw()" style="width:100%; margin:2px 0; padding:4px; background:#6b7280; color:white; border:none; border-radius:4px; cursor:pointer;">Отмена</button>
+      </div>
+    `;
+    mapDiv.insertAdjacentHTML('afterbegin', controlsHtml);
+  }
 });
 </script>
 </body></html>

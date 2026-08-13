@@ -16,11 +16,13 @@ header h1{font-size:16px;white-space:nowrap}
 header small{color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 nav{margin-left:auto;display:flex;gap:8px;align-items:center}
 nav a{color:#7dd3fc;text-decoration:none;font-size:13px;white-space:nowrap}
-#layout{display:grid;grid-template-columns:400px 1fr;grid-template-rows:100vh;height:calc(100vh - 56px)}
+#layout{display:grid;grid-template-columns:400px 1fr;grid-template-rows:calc(100vh - 56px);height:calc(100vh - 56px)}
+aside{background:var(--panel);border-right:1px solid var(--line);padding:12px;overflow-y:auto;overflow-x:hidden;min-height:0}
 #map{height:100%}
-aside{background:var(--panel);border-right:1px solid var(--line);padding:12px;overflow-y:auto}
 .card{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:12px}
 .card h2{font-size:12px;color:#a8dbff;margin-bottom:8px;text-transform:uppercase;letter-spacing:.03em}
+.card.collapsed .card-body{display:none}
+.card.collapsed h2{margin-bottom:0}
 input,select,textarea,button{font:inherit;color:inherit}
 input,select,textarea{width:100%;padding:7px 8px;border-radius:6px;border:1px solid var(--line);background:#0a1729;color:#fff;margin:3px 0 7px}
 button{cursor:pointer;background:#1677b8;color:#fff;border:0;border-radius:6px;padding:7px 10px;font-weight:600}
@@ -88,9 +90,9 @@ button.ghost{background:transparent;border:1px solid var(--line);color:#a8dbff}
       <div id="search-results"></div>
     </div>
 
-    <div class="card">
+    <div class="card" id="passport-card">
       <h2>Паспорт объекта <span style="float:right"><button class="ghost" id="passport-close" style="padding:2px 8px">свернуть</button></span></h2>
-      <div id="passport-body" class="pp-loading">Выберите узел или участок на карте.</div>
+      <div class="card-body"><div id="passport-body" class="pp-loading">Выберите узел или участок на карте.</div></div>
     </div>
 
     <div class="card" id="ed-tools">
@@ -98,9 +100,14 @@ button.ghost{background:transparent;border:1px solid var(--line);color:#a8dbff}
       <div class="row">
         <button id="ed-add-node" class="ghost">+ Узел</button>
         <button id="ed-add-line" class="ghost">+ Участок</button>
+        <button id="ed-demo-node" class="ghost">+ Демо-узел</button>
+      </div>
+      <div class="row">
+        <button id="ed-deadend" class="ghost">+ Dead-end</button>
         <button id="ed-delete" class="ghost" style="color:#fca5a5">Удалить</button>
       </div>
       <div class="hint" id="ed-hint"></div>
+      <input id="demo-house-id" placeholder="ID дома для привязки (реальный из БД)">
       <input id="node-id" placeholder="ID узла (пусто = автоматически)">
       <input id="node-name" placeholder="Название узла">
       <select id="node-type">

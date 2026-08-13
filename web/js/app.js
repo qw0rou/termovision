@@ -27,10 +27,11 @@
 
   // ---------- state ----------
   let map = null;
-  const layers = { nodes: null, pipes: null, social: null, zone: null };
+  const layers = { nodes: null, pipes: null, social: null, zone: null, demo: null };
   let selected = null; // {type:'node'|'pipe', id, name}
-  let editorMode = null; // 'add-node'|'add-line'|null
+  let editorMode = null; // 'add-node'|'add-line'|'add-demo-node'|'add-deadend'|null
   let pendingLineFrom = null; // node id
+  let demoSelection = [];
   const api = {
     get: p => fetch('/api/' + p).then(r => r.json()),
     post: (p, b) => fetch('/api/' + p, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(b || {}) }).then(r => r.json().catch(() => ({})))
@@ -63,8 +64,13 @@
 
   function renderLayers(d) {
     // clear old layers
-    Object.values(layers).forEach(l => { if (l) { try { map.removeLayer(l); } catch (e) {} } });
+    Object.values(layers).forEach(l => { if (l && l !== layers.demo) { try { map.removeLayer(l); } catch (e) {} } });
     layers.zone = null;
+    if (!layers.demo) {
+      layers.demo = L.layerGroup().addTo(map);
+    } else {
+      layers.demo.clearLayers();
+    }
 
     // pipes
     layers.pipes = L.geoJSON(d.pipes, {
@@ -90,14 +96,9 @@
       }
     }).addTo(map);
 
-    // social objects (with real coordinates only)
-    layers.social = L.geoJSON(d.socialObjects || { type: 'FeatureCollection', features: [] }, {
-      pointToLayer: (f, ll) => L.circleMarker(ll, { radius: 6, color: '#38bdf8', fillOpacity: 0.92, weight: 2 }),
-      onEachFeature: (f, l) => {
-        l.bindPopup(`<b>${esc(f.properties.name)}</b><br>${esc(f.properties.type)}<br>${esc(f.properties.address)}`);
-      }
-    }).addTo(map);
-
+    // social objects intentionally hidden from map view; keep them in backend data only
+    if (layers.social) { try { map.removeLayer(layers.social); } catch (e) {} }
+    layers.social = null;
     try {
       const group = L.featureGroup([layers.nodes, layers.pipes]);
       const b = group.getBounds();
@@ -303,6 +304,16 @@
       pendingLineFrom = null;
       updateEditorHint('Режим добавления участка: кликните по двум узлам последовательно.');
     };
+    document.getElementById('ed-demo-node').onclick = () => {
+      editorMode = editorMode === 'add-demo-node' ? null : 'add-demo-node';
+      pendingLineFrom = null;
+      updateEditorHint('Демо-узел: кликните на карту и будет создан временный узел, привязанный к ближайшему участку.');
+    };
+    document.getElementById('ed-deadend').onclick = () => {
+      editorMode = editorMode === 'add-deadend' ? null : 'add-deadend';
+      pendingLineFrom = null;
+      updateEditorHint('Dead-end: кликните по линии, после чего будет создан временный узел на конце ветки и, при необходимости, привязка к реальному дому.');
+    };
     document.getElementById('ed-delete').onclick = () => {
       if (!selected) { alert('Сначала выберите объект на карте'); return; }
       const ok = confirm(`Удалить ${selected.type === 'node' ? 'узел' : 'участок'} ${selected.name || selected.id}?`);
@@ -318,6 +329,62 @@
     document.getElementById('ed-hint').textContent = msg || '';
   }
 
+  function nearestPipePoint(latlng) {
+    if (!layers.pipes || !layers.pipes.eachLayer) return null;
+    let nearest = null;
+    layers.pipes.eachLayer(layer => {
+      const coords = layer.feature && layer.feature.geometry && layer.feature.geometry.coordinates ? layer.feature.geometry.coordinates : [];
+      if (!Array.isArray(coords) || !coords.length) return;
+      for (let i = 0; i < coords.length - 1; i++) {
+        const a = L.latLng(coords[i][1], coords[i][0]);
+        const b = L.latLng(coords[i + 1][1], coords[i + 1][0]);
+        const closest = L.LineUtil.closestPointOnSegment(latlng, a, b);
+        const dist = latlng.distanceTo(closest);
+        if (!nearest || dist < nearest.dist) {
+          nearest = { dist, point: closest, pipe: layer.feature, line: [a, b] };
+        }
+      }
+    });
+    return nearest;
+  }
+
+  async function createDemoNodeAt(latlng, { deadend = false } = {}) {
+    const nearest = nearestPipePoint(latlng);
+    if (!nearest) {
+      alert('Чтобы добавить временный узел, нажмите рядом с существующей теплолинией.');
+      return;
+    }
+    const point = nearest.point;
+    const marker = L.circleMarker(point, { radius: deadend ? 8 : 6, color: '#c084fc', fillOpacity: 0.95, weight: 3 }).addTo(layers.demo);
+    marker.bindPopup(`<b>${deadend ? 'Dead-end' : 'Демо-узел'}</b><br>Временная привязка к участку.<br>Точка: ${point.lat.toFixed(5)}, ${point.lng.toFixed(5)}`);
+    if (deadend) {
+      const branch = L.polyline([[point.lat, point.lng], [latlng.lat, latlng.lng]], { color: '#c084fc', weight: 4, dashArray: '8 8', opacity: 0.8 }).addTo(layers.demo);
+      branch.bindPopup('Временная ветка dead-end');
+      const houseId = (document.getElementById('demo-house-id') || {}).value?.trim() || prompt('Введите ID реального дома из БД для привязки к dead-end', '');
+      if (houseId) {
+        try {
+          const houseRes = await api.get('passports/house/' + encodeURIComponent(houseId));
+          const h = houseRes && houseRes.house ? houseRes.house : null;
+          if (h) {
+            const housePoint = [latlng.lat, latlng.lng];
+            const houseMarker = L.marker(housePoint, { title: `Дом ${h.id}` }).addTo(layers.demo);
+            houseMarker.bindPopup(`<b>Дом ${esc(h.street || '')} ${esc(h.house || '')}</b><br>ID: ${esc(h.id)}<br>ТК: ${esc(h.tk || '—')}<br>Подключён временно к dead-end.`);
+            const houseLine = L.polyline([[point.lat, point.lng], [housePoint[0], housePoint[1]]], { color: '#f59e0b', weight: 3, dashArray: '4 8', opacity: 0.9 }).addTo(layers.demo);
+            houseLine.bindPopup('Реальный дом из БД временно прикреплён к dead-end');
+          } else {
+            alert('Дом с таким ID не найден. Временный dead-end создан без привязки к дому.');
+          }
+        } catch (e) {
+          alert('Не удалось привязать дом к dead-end: ' + (e.message || 'ошибка интерфейса'));
+        }
+      }
+    } else {
+      L.polyline([[point.lat, point.lng], [latlng.lat, latlng.lng]], { color: '#a78bfa', weight: 3, dashArray: '6 8', opacity: 0.8 }).addTo(layers.demo);
+    }
+    demoSelection.push(marker);
+    updateEditorHint('Временный объект создан. Он не сохраняется в БД и служит только для демонстрации логики.');
+  }
+
   function onMapClick(e) {
     if (editorMode === 'add-node') {
       const lat = e.latlng.lat.toFixed(6), lon = e.latlng.lng.toFixed(6);
@@ -325,6 +392,14 @@
       document.getElementById('node-lon').value = lon;
       document.getElementById('node-name').focus();
       updateEditorHint(`Клик зафиксирован: ${lat}, ${lon}. Введите название и сохраните.`);
+      return;
+    }
+    if (editorMode === 'add-demo-node') {
+      createDemoNodeAt(e.latlng, { deadend: false });
+      return;
+    }
+    if (editorMode === 'add-deadend') {
+      createDemoNodeAt(e.latlng, { deadend: true });
       return;
     }
     if (editorMode === 'add-line') {
@@ -384,7 +459,11 @@
   // ---------- UI & search ----------
   function buildUI() {
     document.getElementById('passport-close').onclick = () => {
-      // passport panel stays; close button hides
+      const card = document.getElementById('passport-card');
+      const isCollapsed = card.classList.toggle('collapsed');
+      document.getElementById('passport-close').textContent = isCollapsed ? 'развернуть' : 'свернуть';
+      const body = document.getElementById('passport-body');
+      if (body) body.style.display = isCollapsed ? 'none' : 'block';
     };
     document.getElementById('house-close').onclick = () => {
       document.getElementById('house-modal').style.display = 'none';
