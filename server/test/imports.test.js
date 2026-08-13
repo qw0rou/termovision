@@ -1,0 +1,3 @@
+const test=require('node:test'),assert=require('node:assert/strict'),db=require('../db');
+test('real source import row counts are complete',()=>{assert.equal(db.prepare('SELECT count(*) n FROM nodes').get().n,433);assert.equal(db.prepare('SELECT count(*) n FROM pipes').get().n,782);assert.equal(db.prepare('SELECT count(*) n FROM houses').get().n,6455);assert.equal(db.prepare('SELECT count(*) n FROM bursts').get().n,430);assert.equal(db.prepare('SELECT count(*) n FROM defects').get().n,192)});
+test('network has connected topology and linked consumers',()=>{assert.ok(db.prepare('SELECT count(*) n FROM pipes WHERE from_node_id IS NOT NULL AND to_node_id IS NOT NULL').get().n>700);assert.ok(db.prepare('SELECT count(*) n FROM houses WHERE node_id IS NOT NULL').get().n>0)});

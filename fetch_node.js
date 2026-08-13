@@ -1,0 +1,1 @@
+(async()=>{const r=await fetch('http://localhost:4001/api/passports/node/N510'); const j=await r.json(); console.log(Object.keys(j)); console.log('houses', j.houses && j.houses.length); })().catch(e=>console.error(e));

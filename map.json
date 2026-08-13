@@ -1,0 +1,27 @@
+﻿
+
+StatusCode        : 200
+StatusDescription : OK
+Content           : {"nodes":{"type":"FeatureCollection","features":[{"type":"F
+                    eature","properties":{"id":"N6","name":"БМК 92","type":"Ист
+                    очник","status":"normal","lon":63.6185911,"lat":53.2444943,
+                    "folder":"ПОДЗЕМКА","me...
+RawContent        : HTTP/1.1 200 OK
+                    Access-Control-Allow-Origin: *
+                    Connection: keep-alive
+                    Keep-Alive: timeout=5
+                    Content-Length: 2498962
+                    Content-Type: application/json; charset=utf-8
+                    Date: Thu, 13 Aug 2026 09:31:22 ...
+Forms             : 
+Headers           : {[Access-Control-Allow-Origin, *], [Connection, 
+                    keep-alive], [Keep-Alive, timeout=5], [Content-Length, 
+                    2498962]...}
+Images            : {}
+InputFields       : {}
+Links             : {}
+ParsedHtml        : 
+RawContentLength  : 2498962
+
+
+

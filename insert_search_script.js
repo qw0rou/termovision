@@ -1,0 +1,1 @@
+const fs=require('fs');const p='web/index.html';let s=fs.readFileSync(p,'utf8');const needle='</body>';if(!s.includes(needle)){console.error('closing body tag not found');process.exit(1);}const script='\n<script src="/js/search.js"></script>\n';s=s.replace(needle,script+needle);fs.writeFileSync(p,s,'utf8');console.log('inserted script tag');

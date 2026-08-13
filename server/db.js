@@ -1,0 +1,24 @@
+const Database=require('better-sqlite3'),path=require('path'),fs=require('fs');
+const dir=path.join(__dirname,'db');fs.mkdirSync(dir,{recursive:true});const db=new Database(path.join(dir,'heatnet.sqlite'));db.pragma('journal_mode = WAL');
+db.exec(`
+CREATE TABLE IF NOT EXISTS nodes (id TEXT PRIMARY KEY,name TEXT,type TEXT,status TEXT DEFAULT 'normal',lon REAL,lat REAL,folder TEXT,meta TEXT);
+CREATE TABLE IF NOT EXISTS pipes (id TEXT PRIMARY KEY,name TEXT,status TEXT DEFAULT 'normal',diameter_mm REAL,length_m REAL,coordinates TEXT,folder TEXT,from_node_id TEXT,to_node_id TEXT,meta TEXT);
+CREATE TABLE IF NOT EXISTS houses (id TEXT PRIMARY KEY,street TEXT,house TEXT,block TEXT,tk TEXT,node_id TEXT,area REAL,owner TEXT,active INTEGER,note TEXT,year INTEGER,sq REAL,flats INTEGER,floors INTEGER,load REAL,source TEXT,raw TEXT);
+CREATE TABLE IF NOT EXISTS bursts (id TEXT PRIMARY KEY,status TEXT,source TEXT,tk TEXT,node_id TEXT,brigade TEXT,date_detected TEXT,date_shutdown TEXT,address TEXT,defect_char TEXT,note TEXT,social_objects TEXT,plan_date TEXT,deadline TEXT,actual_fix_date TEXT,detected_by TEXT,master TEXT,diameter TEXT,is_magistral INTEGER,is_opres INTEGER,is_water_on INTEGER,is_invest INTEGER,is_kap INTEGER,is_plan_kap INTEGER,is_not_ours INTEGER,photos TEXT,raw TEXT);
+CREATE TABLE IF NOT EXISTS defects (id TEXT PRIMARY KEY,source TEXT,date_observed TEXT,tk TEXT,node_id TEXT,address TEXT,defect_type TEXT,network_type TEXT,note TEXT,detected_by TEXT,priority INTEGER,plan_date TEXT,resolved INTEGER,resolve_date TEXT,master TEXT,photos TEXT,raw TEXT);
+CREATE TABLE IF NOT EXISTS unmatched_tk (id INTEGER PRIMARY KEY AUTOINCREMENT,entity_type TEXT,entity_id TEXT,tk_raw TEXT,normalized TEXT,candidates TEXT,resolved_node_id TEXT,created_at TEXT DEFAULT CURRENT_TIMESTAMP,UNIQUE(entity_type,entity_id));
+CREATE TABLE IF NOT EXISTS thresholds (key TEXT PRIMARY KEY,min REAL,max REAL,label TEXT);
+CREATE TABLE IF NOT EXISTS node_types (id INTEGER PRIMARY KEY AUTOINCREMENT,name TEXT UNIQUE,color TEXT DEFAULT '#64748b');
+CREATE TABLE IF NOT EXISTS passport_fields (id INTEGER PRIMARY KEY AUTOINCREMENT,entity_type TEXT,field_key TEXT,label TEXT,field_type TEXT DEFAULT 'text');
+CREATE TABLE IF NOT EXISTS topology_edits (id INTEGER PRIMARY KEY AUTOINCREMENT,node_id TEXT,lat REAL,lon REAL,note TEXT,created_at TEXT DEFAULT CURRENT_TIMESTAMP);
+CREATE TABLE IF NOT EXISTS utility_crossings (id INTEGER PRIMARY KEY AUTOINCREMENT,type TEXT,lat REAL,lon REAL,note TEXT);
+CREATE TABLE IF NOT EXISTS inspections (id TEXT PRIMARY KEY,node_id TEXT,task_id TEXT,worker TEXT,observed_at TEXT,result TEXT,note TEXT,photos TEXT,lat REAL,lon REAL,synced_at TEXT DEFAULT CURRENT_TIMESTAMP);
+CREATE TABLE IF NOT EXISTS inspection_tasks (id TEXT PRIMARY KEY,node_id TEXT,title TEXT,planned_at TEXT,priority INTEGER,status TEXT DEFAULT 'planned',assignee TEXT,note TEXT);
+CREATE TABLE IF NOT EXISTS scenarios (id TEXT PRIMARY KEY,title TEXT,pipe_id TEXT,node_id TEXT,created_by TEXT,created_at TEXT,zone_json TEXT,note TEXT);
+CREATE TABLE IF NOT EXISTS roles (id TEXT PRIMARY KEY,label TEXT);
+`);
+for(const q of ["ALTER TABLE nodes ADD COLUMN passport TEXT DEFAULT '{}'","ALTER TABLE pipes ADD COLUMN supply_diameter_mm REAL","ALTER TABLE pipes ADD COLUMN return_diameter_mm REAL","ALTER TABLE pipes ADD COLUMN installation_type TEXT","ALTER TABLE pipes ADD COLUMN material TEXT"])try{db.exec(q)}catch{};
+for(const r of [['dispatcher','Диспетчер'],['field','Выездная бригада'],['admin','Администратор']])db.prepare('INSERT OR IGNORE INTO roles VALUES(?,?)').run(...r);
+for(const r of [['temperature',55,95,'Температура подачи, °C'],['pressure',3,12,'Давление, бар'],['load',0,20,'Нагрузка, Гкал/ч']])db.prepare('INSERT OR IGNORE INTO thresholds VALUES(?,?,?,?)').run(...r);
+for(const r of [['Камера','#2563eb'],['Источник','#7c3aed'],['Узел','#0f766e'],['Дренаж','#0ea5e9'],['Воздушник','#f59e0b']])db.prepare('INSERT OR IGNORE INTO node_types(name,color) VALUES(?,?)').run(...r);
+module.exports=db;

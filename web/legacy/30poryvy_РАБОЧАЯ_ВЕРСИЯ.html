@@ -1,0 +1,1277 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>КТЭК - СКАДА Диспетчера v55 / Диспетчер СКАДА-сы</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #e9ecef; margin: 0; padding: 10px; height: 100vh; box-sizing: border-box; display: flex; flex-direction: column; overflow: hidden; font-size: 11px; }
+        .container { background: white; padding: 15px; border-radius: 4px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; flex: 1; display: flex; flex-direction: column; overflow: hidden; box-sizing: border-box; }
+        
+        .top-section { flex-shrink: 0; }
+        
+        .top-bar { display: flex; justify-content: space-between; align-items: center; background: #003366; color: white; padding: 10px 15px; border-radius: 4px; margin-bottom: 10px; flex-wrap: wrap; gap: 10px; }
+        .top-bar h2 { margin: 0; font-size: 16px; display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
+        .developer-credit { font-size: 11px; color: #a0c4ff; font-weight: normal; opacity: 0.8; letter-spacing: 0.5px; border-left: 1px solid #5c8fc2; padding-left: 10px; cursor: pointer; transition: color 0.2s; }
+        .developer-credit:hover { color: #ffffff; }
+        .base-date { font-size: 12px; color: #ffeb3b; font-weight: bold; border-left: 1px solid #5c8fc2; padding-left: 10px; }
+        
+        .btn-panel button, .btn-panel label { cursor: pointer; padding: 6px 12px; font-weight: bold; border: 1px solid #ccc; border-radius: 3px; background: #f8f9fa; color: #333; margin-left: 5px; font-size: 11px; display: inline-flex; align-items: center; gap: 5px;}
+        .btn-print { background: #0277bd !important; color: white !important; border: none !important; }
+        .btn-backup { background: #ffc107 !important; color: #000 !important; border: none !important; }
+        .btn-import { background: #17a2b8 !important; color: #fff !important; border: none !important; }
+
+        .lang-switch { background: #f39c12 !important; color: white !important; border: none !important; font-size: 12px !important; transition: 0.2s; }
+        .lang-switch:hover { background: #d68910 !important; }
+
+        .tabs { display: flex; gap: 5px; margin-bottom: 10px; flex-wrap: wrap;}
+        .tab-btn { padding: 8px 16px; cursor: pointer; border: none; background: #ddd; font-weight: bold; border-radius: 4px 4px 0 0; display: flex; align-items: center; gap: 5px;}
+        .tab-btn.active { background: #003366; color: white; }
+
+        .search-container { display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; align-items: center; background: #e3f2fd; padding: 8px; border-radius: 4px; border: 1px solid #90caf9;}
+        .search-input { flex: 1; padding: 8px 15px; font-size: 13px; border: 2px solid #003366; border-radius: 4px; background: #fff8e1; font-weight: bold; }
+        .filter-select { padding: 8px 15px; font-size: 13px; border: 2px solid #003366; border-radius: 4px; font-weight: bold; background: white; cursor: pointer; }
+        .filter-label { font-weight: bold; color: #003366; font-size: 12px; margin-left: 5px; }
+
+        .input-form { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; background: #f1f8e9; padding: 10px 15px; border: 1px solid #c5e1a5; margin-bottom: 10px; border-radius: 4px; }
+        .input-group { display: flex; flex-direction: column; }
+        .input-group label { font-weight: bold; margin-bottom: 2px; font-size: 10px; color: #333; }
+        .input-form input, .input-form select { width: 100%; padding: 5px; border: 1px solid #999; box-sizing: border-box; font-size: 11px; border-radius: 3px; }
+        .btn-add { background: #2e7d32; color: white; border: none; font-weight: bold; font-size: 12px; padding: 8px; cursor: pointer; border-radius: 3px; margin-top: 2px; }
+        
+        .tab-content { display: none; flex: 1; flex-direction: column; min-height: 0; }
+        .tab-content.active { display: flex; }
+        
+        .table-wrapper { flex: 1; overflow-y: auto; overflow-x: auto; border: 1px solid #6c757d; border-radius: 3px; background: white; }
+        table { width: 100%; min-width: 2400px; border-collapse: separate; border-spacing: 0; }
+        th, td { border-right: 1px solid #6c757d; border-bottom: 1px solid #6c757d; padding: 4px; text-align: center; transition: background 0.1s;}
+        th:first-child, td:first-child { border-left: 1px solid #6c757d; }
+        th { background: #dee2e6; color: #212529; position: sticky; top: 0; z-index: 10; height: 35px; box-shadow: 0 2px 2px -1px rgba(0,0,0,0.4); border-top: 1px solid #6c757d; }
+        
+        tbody tr:hover td { background-color: #f1f8e9; cursor: pointer; }
+        .selected-row td { background-color: #fff9c4 !important; border-top: 2px solid #f57f17; border-bottom: 2px solid #f57f17; }
+
+        .time-badge { font-weight: bold; color: #d32f2f; background: #f8d7da; padding: 3px 5px; border-radius: 3px; display: inline-block; white-space: nowrap; }
+        .btn-kap, .btn-ok, .btn-edit, .btn-not-ours { color: white; border: none; padding: 4px; border-radius: 3px; cursor: pointer; font-size: 9px; margin-top: 3px; width: 100%; font-weight: bold; }
+        .btn-kap { background: #8e24aa; } .btn-ok { background: #198754; } .btn-edit { background: #0288d1; } .btn-not-ours { background: #757575; }
+        
+        .tag-opres, .tag-not-ours, .tag-pl-kap, .tag-av-kap, .tag-mag, .tag-vnutr, .tag-inv { font-size: 9px; padding: 2px 4px; border-radius: 3px; font-weight: bold; display: inline-block; margin-top: 3px; border: 1px solid transparent; }
+        .tag-opres { background: #e3f2fd; color: #1565c0; border-color: #0288d1; }
+        .tag-not-ours { background: #e0e0e0; color: #424242; }
+        .tag-pl-kap { background: #fff3cd; color: #856404; border-color: #ffeeba; }
+        .tag-av-kap { background: #f8d7da; color: #721c24; border-color: #f5c6cb; }
+        .tag-mag { background: #ffe0b2; color: #e65100; border-color: #ffb300; }
+        .tag-vnutr { background: #e0f7fa; color: #006064; border-color: #81d4fa; }
+        .tag-inv { background: #e8f5e9; color: #2e7d32; border-color: #c8e6c9; }
+
+        .clickable-card { cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; }
+        .clickable-card:hover { transform: translateY(-3px); box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
+
+        .btn-photo { background: #0288d1; color: white; border: none; padding: 3px 6px; cursor: pointer; border-radius: 3px; font-size: 9px; font-weight: bold; }
+        #photo-viewer { position: fixed; top:5%; left:5%; width:90%; height:90%; background: white; z-index: 18000; display: none; border: 3px solid #003366; padding: 15px; overflow-y: auto; }
+        .photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+        .photo-grid img { width: 100%; border-radius: 5px; border: 1px solid #ddd; }
+
+        #tab-stat { overflow-y: auto; padding-right: 10px; }
+        .analytics-section { margin-bottom: 20px; background: white; padding: 15px; border-radius: 5px; border: 1px solid #ddd; }
+        .analytics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; } 
+        .stat-card { background: #f8f9fa; padding: 15px; border-radius: 5px; border-left: 5px solid #003366; }
+        .stat-card h4 { margin: 0 0 10px 0; color: #555; font-size: 11px; text-transform: uppercase; }
+        .stat-card .value { font-size: 20px; font-weight: bold; color: #003366; }
+        .stat-card.alert { border-left-color: #d32f2f; } .stat-card.alert .value { color: #d32f2f; }
+        .stat-card.warning { border-left-color: #f57c00; } .stat-card.warning .value { color: #f57c00; }
+        .stat-card.success { border-left-color: #2e7d32; } .stat-card.success .value { color: #2e7d32; }
+
+        .charts-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-top: 15px; }
+        .chart-box { background: white; padding: 15px; border-radius: 5px; border: 1px solid #ccc; max-height: 250px; overflow-y: auto; }
+        .chart-box h4 { margin-top: 0; border-bottom: 1px solid #eee; padding-bottom: 5px; position: sticky; top: -15px; background: white; z-index: 2; }
+        .chart-row { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 12px; }
+        .chart-row span:last-child { font-weight: bold; }
+
+        /* ЗОНА ДЛЯ СЕКРЕТНОЙ ПЕЧАТИ */
+        #special-print-area { display: none; }
+
+        @media print {
+            @page { size: landscape; margin: 10mm; }
+            .no-print, .top-section, .btn-photo { display: none !important; }
+            body:not(.print-special) { background: white; margin: 0; padding: 0; }
+            body:not(.print-special) .container { height: auto !important; display: block !important; overflow: visible !important; margin: 0; padding: 0; background: white; }
+            body:not(.print-special) .tab-content.active { display: block !important; }
+            body:not(.print-special) .table-wrapper { max-height: none !important; overflow: visible !important; border: none !important; }
+            body:not(.print-special) table { min-width: 100% !important; width: 100% !important; border: 1px solid black; font-size: 7px !important; table-layout: fixed; word-wrap: break-word; }
+            body:not(.print-special) th, body:not(.print-special) td { border: 1px solid black !important; padding: 2px !important; }
+            body:not(.print-special) th { background: #e0e0e0 !important; color: black !important; position: static !important; box-shadow: none !important; font-size: 8px !important; }
+            
+            /* СТИЛИ ТОЛЬКО ДЛЯ СПЕЦ. ОТЧЕТА */
+            body.print-special { background: white; padding: 0; margin: 0; font-family: 'Times New Roman', serif; }
+            body.print-special .container { display: none !important; }
+            body.print-special #photo-viewer { display: none !important; }
+            body.print-special #special-print-area { display: block !important; }
+            body.print-special table { width: 100%; border-collapse: collapse; font-size: 10pt; page-break-inside: auto; }
+            body.print-special tr { page-break-inside: avoid; page-break-after: auto; }
+            body.print-special thead { display: table-header-group; }
+            body.print-special th, body.print-special td { border: 1px solid black; padding: 4px; text-align: center; }
+            body.print-special th { background-color: #f2f2f2; font-weight: bold; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="photo-viewer">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h3 style="margin:0;" data-lang="ph_title">📸 Фотоматериалы</h3>
+        <button onclick="document.getElementById('photo-viewer').style.display='none'" style="background:red; color:white; border:none; padding:10px; cursor:pointer; font-weight:bold; border-radius:3px;" data-lang="ph_close">ЗАКРЫТЬ</button>
+    </div>
+    <div style="margin:15px 0; padding:10px; background:#fff3cd; border:1px solid #ffeeba; border-radius:3px; color:#856404; font-weight:bold;" data-lang="ph_warn">
+        ⚠️ ВНИМАНИЕ: Память браузера ограничена! Грузите только самые важные фото (сжатые).
+    </div>
+    <div style="margin-bottom:15px; padding:10px; background:#eee; border-radius:3px;">
+        <label style="font-weight:bold;" data-lang="ph_add">Добавить фото: </label><input type="file" id="file-input" accept="image/*" onchange="uploadPhotoLocal()">
+    </div>
+    <div class="photo-grid" id="photo-display"></div>
+</div>
+
+<div class="container">
+    <div class="top-section">
+        <div class="top-bar no-print">
+            <h2>🦾 <span data-lang="app_title">КТЭК — СКАДА ДИСПЕТЧЕРА</span>
+                <span class="developer-credit" data-lang="dev_cred" ondblclick="printSpecial()" title="Двойной клик для Аналитического отчета">Разработано: Зиненко А.В.</span>
+                <span class="base-date">📅 <span data-lang="base_dt">База ведется с:</span> <span id="global-start-date">...</span></span>
+            </h2>
+            <div class="btn-panel">
+                <button class="lang-switch" onclick="toggleLang()" id="langBtn">🇰🇿 ҚАЗ</button>
+                <button class="btn-print" onclick="window.print()" data-lang="btn_print">🖨️ ПЕЧАТЬ</button>
+                <button class="btn-backup" onclick="exportDB()" data-lang="btn_backup">💾 БЭКАП БАЗЫ</button>
+                <label class="btn-import"><span data-lang="btn_import">📂 ИМПОРТ</span><input type="file" accept=".json" style="display:none" onchange="importDB(event)"></label>
+            </div>
+        </div>
+
+        <div class="tabs no-print">
+            <button class="tab-btn active" onclick="switchTab('act')"><span data-lang="tab_act">⚠️ ТЕКУЩИЕ ПОРЫВЫ</span> (<span id="c-act">0</span>)</button>
+            <button class="tab-btn" onclick="switchTab('kap')"><span data-lang="tab_kap">🚧 КАП. РЕМОНТ</span> (<span id="c-kap">0</span>)</button>
+            <button class="tab-btn" onclick="switchTab('plan')"><span data-lang="tab_plan">🗓️ СВОДНЫЙ ПЛАН</span> (<span id="c-plan">0</span>)</button>
+            <button class="tab-btn" onclick="switchTab('cls')"><span data-lang="tab_cls">✅ АРХИВ</span> (<span id="c-cls">0</span>)</button>
+            <button class="tab-btn" onclick="switchTab('stat')" style="background:#0277bd; color:white; margin-left:20px;" data-lang="tab_stat">📊 АНАЛИТИКА</button>
+        </div>
+
+        <div class="search-container no-print" id="search-block">
+            <input type="text" id="searchInput" class="search-input" data-placeholder="search_ph" placeholder="🔍 Умный поиск: адрес, ТК, отпайка, мастер..." oninput="render()">
+            
+            <select id="filter-src" class="filter-select" onchange="render()">
+                <option value="" data-lang="flt_all">Все источники (Для печати)</option>
+                <option value="SPEC_KAP" data-lang="flt_spec_kap" style="background:#fff3cd; font-weight:bold;">👉 Только Кап. ремонт</option>
+                <option value="SPEC_INV" data-lang="flt_spec_inv" style="background:#e8f5e9; font-weight:bold; color:#2e7d32;">👉 Только Инвест. программа</option>
+                <option value="SPEC_OVERDUE" data-lang="flt_spec_overdue" style="background:#f8d7da; font-weight:bold; color:#d32f2f;">👉 Только Просроченные</option>
+                <option value="SPEC_NOT" data-lang="flt_spec_not" style="background:#e0e0e0; font-weight:bold;">👉 Только "Не наши"</option>
+                <option disabled>──────────────</option>
+                <option value="ТЭЦ">ТЭЦ</option>
+                <option value="ТЭЦ № 2">ТЭЦ № 2</option>
+                <option value="РК-3">РК-3</option>
+                <option value="Котельная № 3">Котельная № 3</option>
+                <option value="Котельная № 12">Котельная № 12</option>
+                <option value="БМК Кунай">БМК Кунай</option>
+                <option value="БМК-92(юбилейный)">БМК-92(юбилейный)</option>
+                <option value="БМК-93(юбилейный)">БМК-93(юбилейный)</option>
+                <option value="Жулдыз">Жулдыз</option>
+                <option value="Теплоснаб МК-3700">Теплоснаб МК-3700</option>
+                <option value="ТИ № 10- Кост-2">ТИ № 10- Кост-2</option>
+                <option value="ТИ № 11 - п.Дружба">ТИ № 11 - п.Дружба</option>
+                <option value="ТИ № 4 - КСМК">ТИ № 4 - КСМК</option>
+                <option value="ТИ № 6 - Мехколонна">ТИ № 6 - Мехколонна</option>
+                <option value="ТИ № 8 - п.Геофизиков">ТИ № 8 - п.Геофизиков</option>
+                <option value="ТИ № 9 - п.Амангельды">ТИ № 9 - п.Амангельды</option>
+                <option value="Другое">Другое</option>
+            </select>
+
+            <select id="sort-select" class="filter-select" onchange="render()" style="background:#fff3cd;">
+                <option value="" data-lang="srt_def">Сортировка: По умолчанию (Новые)</option>
+                <option value="plan" data-lang="srt_plan">Сортировка: По дате Плана (Ближайшие)</option>
+                <option value="deadline" data-lang="srt_dead">Сортировка: По Дедлайну (Горящие)</option>
+                <option value="houses" data-lang="srt_house">Сортировка: Откл. дома (Максимум)</option>
+            </select>
+            
+            <span class="filter-label" data-lang="flt_from">Период С:</span>
+            <input type="date" id="filter-date-start" class="filter-select" onchange="render()">
+            <span class="filter-label" data-lang="flt_to">ПО:</span>
+            <input type="date" id="filter-date-end" class="filter-select" onchange="render()">
+        </div>
+
+        <div class="input-form no-print" id="input-block">
+            <div class="input-group"><label data-lang="fm_src">Источник:</label>
+                <select id="v2"><option value="ТЭЦ">ТЭЦ</option><option value="ТЭЦ № 2">ТЭЦ № 2</option><option value="РК-3">РК-3</option><option value="Котельная № 3">Котельная № 3</option><option value="Котельная № 12">Котельная № 12</option><option value="БМК Кунай">БМК Кунай</option><option value="БМК-92(юбилейный)">БМК-92(юбилейный)</option><option value="БМК-93(юбилейный)">БМК-93(юбилейный)</option><option value="Жулдыз">Жулдыз</option><option value="Теплоснаб МК-3700">Теплоснаб МК-3700</option><option value="ТИ № 10- Кост-2">ТИ № 10- Кост-2</option><option value="ТИ № 11 - п.Дружба">ТИ № 11 - п.Дружба</option><option value="ТИ № 4 - КСМК">ТИ № 4 - КСМК</option><option value="ТИ № 6 - Мехколонна">ТИ № 6 - Мехколонна</option><option value="ТИ № 8 - п.Геофизиков">ТИ № 8 - п.Геофизиков</option><option value="ТИ № 9 - п.Амангельды">ТИ № 9 - п.Амангельды</option><option value="Другое">Другое</option></select>
+            </div>
+            <div class="input-group"><label data-lang="fm_uch">Участок:</label>
+                <select id="v4"><option>Ц-1</option><option>Ц-3</option><option>МС</option><option>КЖБИ</option><option>КСК</option><option>РСУ</option></select>
+            </div>
+            <div class="input-group"><label data-lang="fm_diam">Диаметр (мм):</label><input type="text" id="v-diam"></div>
+            <div class="input-group"><label data-lang="fm_tk">Отпайка (ТК):</label><input type="text" id="v3"></div>
+            <div class="input-group"><label data-lang="fm_dt1">Дата и время обнаруж.:</label><input type="datetime-local" id="v5"></div>
+            <div class="input-group"><label data-lang="fm_dt2">Дата и время ОТКЛЮЧ.:</label><input type="datetime-local" id="v6" style="background:#ffebee; border-color:#ef9a9a;"></div>
+            <div class="input-group"><label data-lang="fm_adr">Адрес:</label><input type="text" id="v7"></div>
+            <div class="input-group"><label data-lang="fm_char">Характер порыва:</label><input type="text" id="v8"></div>
+            <div class="input-group"><label data-lang="fm_not">Примечание:</label><input type="text" id="v9"></div>
+            
+            <div class="input-group">
+                <label data-lang="fm_dmo">Откл. домов (шт):</label>
+                <div style="display:flex; align-items:center; gap:5px;">
+                    <input type="number" id="v10" style="width:50%;">
+                    <label style="display:flex; align-items:center; gap:2px; cursor:pointer;">
+                        <input type="checkbox" id="is-water-on" style="width:auto !important; margin:0;">
+                        <span data-lang="fm_w_on" style="font-size:9px; font-weight:bold; color:#0277bd;">Вода временно подана</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="input-group"><label data-lang="fm_soc">Соц. объекты:</label><input type="text" id="v11"></div>
+            <div class="input-group"><label data-lang="fm_ur">Юр. лица:</label><input type="text" id="v12"></div>
+            <div class="input-group"><label data-lang="fm_pln">План на:</label><input type="date" id="v13"></div>
+            <div class="input-group"><label data-lang="fm_srok">Срок (дней/часов):</label><input type="text" id="v14"></div>
+            <div class="input-group"><label data-lang="fm_fact">Факт устранения:</label><input type="datetime-local" id="v15" style="background:#e8f5e9; border-color:#a5d6a7;"></div>
+            <div class="input-group"><label data-lang="fm_kto">Кто обнаружил (ФИО):</label><input type="text" id="v17"></div>
+            <div class="input-group"><label data-lang="fm_mst">Кто устранил (Мастер):</label><input type="text" id="v18"></div>
+            
+            <div class="input-group" style="flex-direction:row; align-items:center; gap:15px; grid-column:span 6; flex-wrap: wrap; margin-top: 5px;">
+                <label style="display:flex; align-items:center; gap:3px; cursor:pointer;"><input type="checkbox" id="is-opres"> <span class="tag-opres" data-lang="fm_opr">ОПРЕССОВКА</span></label>
+                <label style="display:flex; align-items:center; gap:3px; cursor:pointer;"><input type="checkbox" id="is-magistral"> <span class="tag-mag" data-lang="fm_mag">МАГИСТРАЛЬ</span></label>
+                <label style="display:flex; align-items:center; gap:3px; cursor:pointer;"><input type="checkbox" id="is-invest"> <span class="tag-inv" data-lang="fm_inv">ИНВЕСТ. ПРОГРАММА</span></label>
+            </div>
+            
+            <div style="grid-column: span 6; display: flex; gap: 8px;">
+                <button id="main-btn" class="btn-add" style="flex: 1;" onclick="saveEntry(false)" data-lang="btn_save">+ ДОБАВИТЬ НОВУЮ ЗАПИСЬ</button>
+                <button id="plan-kap-btn" class="btn-add" style="flex: 1; background: #f57c00;" onclick="saveEntry(true)" data-lang="btn_plan_kap">+ В ПЛАНОВЫЙ КАП. РЕМОНТ</button>
+            </div>
+        </div>
+    </div> 
+
+    <div id="tab-act" class="tab-content active"><div class="table-wrapper"><table><thead><tr id="th-row-act"></tr></thead><tbody id="tb-act"></tbody></table></div></div>
+    <div id="tab-kap" class="tab-content"><div class="table-wrapper"><table><thead><tr id="th-row-kap"></tr></thead><tbody id="tb-kap"></tbody></table></div></div>
+    <div id="tab-plan" class="tab-content"><div class="table-wrapper"><table><thead><tr id="th-row-plan"></tr></thead><tbody id="tb-plan"></tbody></table></div></div>
+    <div id="tab-cls" class="tab-content"><div class="table-wrapper"><table><thead><tr id="th-row-cls"></tr></thead><tbody id="tb-cls"></tbody></table></div></div>
+
+    <div id="tab-stat" class="tab-content">
+        <div class="analytics-section" style="background: #fffde7; border: 1px solid #fff59d; border-left: 5px solid #fbc02d;">
+            <h3 style="margin-top:0; color:#f57f17;">📅 <span data-lang="st_chron">Хронология</span> <span id="stat-title-source" style="color:#d32f2f"></span></h3>
+            <div style="font-size:14px; margin:5px 0;"><span data-lang="st_ch1">Записей за период:</span> <b id="stat-total-all" style="color:#d32f2f; font-size:16px;">0</b> <span data-lang="sht">шт.</span></div>
+            <div style="font-size:14px; margin:5px 0;"><span data-lang="st_ch2">Пик порывов пришелся на:</span> <b id="stat-peak-month" style="color:#d32f2f; font-size:16px;">-</b> (<span id="stat-peak-count">0</span> <span data-lang="sht">шт.</span>)</div>
+            <div style="font-size:14px; margin:5px 0;"><span data-lang="st_ch3">Меньше всего порывов было в:</span> <b id="stat-min-month" style="color:#d32f2f; font-size:16px;">-</b> (<span id="stat-min-count">0</span> <span data-lang="sht">шт.</span>)</div>
+        </div>
+
+        <div class="analytics-section">
+            <h3 style="margin-top:0; color:#d32f2f; border-bottom: 2px solid #d32f2f; padding-bottom:5px;" data-lang="st_op_title">⚠️ ОПЕРАТИВНАЯ СВОДКА (СЕЙЧАС)</h3>
+            <div class="analytics-grid" style="grid-template-columns: repeat(4, 1fr);">
+                <div class="stat-card clickable-card" onclick="setFilter('')">
+                    <h4 data-lang="st_op1">В работе (Аварии)</h4>
+                    <div class="value" id="stat-act">0</div>
+                    <div id="stat-act-breakdown" style="font-size: 10px; margin-top: 5px; color: #555;"></div>
+                </div>
+                <div class="stat-card clickable-card" style="border-left-color:#8e24aa;" onclick="setFilter('SPEC_KAP')">
+                    <h4 data-lang="st_op5">В Кап. ремонте</h4>
+                    <div class="value" style="color:#8e24aa;" id="stat-kap-total">0</div>
+                    <div id="stat-kap-breakdown" style="font-size: 10px; margin-top: 5px; color: #555;"></div>
+                </div>
+                <div class="stat-card alert">
+                    <h4 data-lang="st_op2">Отключено домов</h4>
+                    <div class="value" id="stat-houses">0</div>
+                    <div id="stat-houses-breakdown" style="font-size: 10px; margin-top: 5px; color: #555;"></div>
+                </div>
+                <div class="stat-card" style="border-left-color:#1565c0;"><h4 data-lang="st_op3">Опрессовка (в работе)</h4><div class="value" style="color:#1565c0;" id="stat-opres">0</div></div>
+            </div>
+            <div class="charts-container">
+                <div class="chart-box" style="border-color: #ffcdd2;"><h4 style="color: #d32f2f;" data-lang="st_c1">В работе по Участкам</h4><div id="chart-uchastok"></div></div>
+                <div class="chart-box" style="border-color: #ffcdd2;"><h4 style="color: #d32f2f;" data-lang="st_c2">В работе по Источникам</h4><div id="chart-istochnik"></div></div>
+            </div>
+        </div>
+
+        <div class="analytics-section">
+            <h3 style="margin-top:0; color:#2e7d32; border-bottom: 2px solid #2e7d32; padding-bottom:5px;" data-lang="st_inv_title">📈 КОНТРОЛЬ ПЛАНОВ И ИНВЕСТ. ПРОГРАММЫ</h3>
+            <div class="analytics-grid" style="grid-template-columns: repeat(4, 1fr);">
+                <div class="stat-card success clickable-card" style="border-left-color:#2e7d32;" onclick="setFilter('SPEC_INV')">
+                    <h4 data-lang="st_inv1">По Инвест. программе</h4>
+                    <div class="value" style="color:#2e7d32;" id="stat-invest">0</div>
+                </div>
+                <div class="stat-card alert clickable-card" onclick="setFilter('SPEC_OVERDUE')">
+                    <h4 data-lang="st_inv2">Просрочено (Горят сроки)</h4>
+                    <div class="value" id="stat-overdue">0</div>
+                </div>
+                <div class="stat-card warning">
+                    <h4 data-lang="st_inv3">В плане на сегодня/завтра</h4>
+                    <div class="value" id="stat-soon">0</div>
+                </div>
+                <div class="stat-card success" style="border-left-color:#198754;">
+                    <h4 data-lang="st_inv4">Выполнено в срок (%)</h4>
+                    <div class="value" style="color:#198754;" id="stat-ontime-pct">0%</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="analytics-section">
+            <h3 style="margin-top:0; color:#2e7d32; border-bottom: 2px solid #2e7d32; padding-bottom:5px;" data-lang="st_ar_title">✅ АНАЛИТИКА АРХИВА (УСТРАНЕНО)</h3>
+            <div class="analytics-grid" style="grid-template-columns: repeat(4, 1fr);">
+                <div class="stat-card success">
+                    <h4 data-lang="st_ar1">Устранено всего</h4>
+                    <div class="value" id="stat-cls">0</div>
+                    <div id="stat-cls-breakdown" style="font-size: 10px; margin-top: 5px; color: #555;"></div>
+                </div>
+                <div class="stat-card warning"><h4 data-lang="st_ar2">Ср. время реакции (до откл.)</h4><div class="value" id="stat-reaction">0</div></div>
+                <div class="stat-card alert"><h4 data-lang="st_ar3">Ср. время простоя (без воды)</h4><div class="value" id="stat-downtime">0</div></div>
+                <div class="stat-card clickable-card" style="border-left-color:#757575;" onclick="setFilter('SPEC_NOT')">
+                    <h4 data-lang="st_op4">Порывов "Не наших"</h4>
+                    <div class="value" style="color:#757575;" id="stat-not-ours">0</div>
+                </div>
+            </div>
+            <div class="charts-container" style="grid-template-columns: repeat(3, 1fr);">
+                <div class="chart-box" style="border-color: #c8e6c9;"><h4 style="color: #2e7d32;" data-lang="st_c3">Устранено по Участкам</h4><div id="chart-uchastok-cls"></div></div>
+                <div class="chart-box" style="border-color: #c8e6c9;"><h4 style="color: #2e7d32;" data-lang="st_c4">Устранено по Источникам</h4><div id="chart-istochnik-cls"></div></div>
+                <div class="chart-box" style="border-color: #c8e6c9;"><h4 style="color: #2e7d32;" data-lang="st_c5">🏆 Топ мастеров (Устранено)</h4><div id="chart-masters"></div></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="special-print-area"></div>
+
+<script>
+    const dict = {
+        'ru': {
+            app_title: 'КТЭК — СКАДА ДИСПЕТЧЕРА', dev_cred: 'Разработано: Зиненко А.В.', base_dt: 'База ведется с:',
+            btn_print: '🖨️ ПЕЧАТЬ', btn_backup: '💾 БЭКАП БАЗЫ', btn_import: '📂 ИМПОРТ',
+            tab_act: '⚠️ ТЕКУЩИЕ ПОРЫВЫ', tab_kap: '🚧 КАП. РЕМОНТ', tab_plan: '🗓️ СВОДНЫЙ ПЛАН', tab_cls: '✅ АРХИВ', tab_stat: '📊 АНАЛИТИКА',
+            search_ph: '🔍 Умный поиск: адрес, ТК, отпайка, мастер...', flt_all: 'Все источники (Для печати)', flt_from: 'Период С:', flt_to: 'ПО:',
+            flt_spec_kap: '👉 Только Кап. ремонт', flt_spec_not: '👉 Только "Не наши"', flt_spec_inv: '👉 Только Инвест. программа', flt_spec_overdue: '👉 Только Просроченные',
+            srt_def: 'Сортировка: По умолчанию (Новые)', srt_plan: 'Сортировка: По дате Плана', srt_dead: 'Сортировка: По Дедлайну', srt_house: 'Сортировка: Откл. дома (Максимум)',
+            fm_src: 'Источник:', fm_uch: 'Участок:', fm_diam: 'Диаметр (мм):', fm_tk: 'Отпайка (ТК):', fm_dt1: 'Дата и время обнаруж.:', fm_dt2: 'Дата и время ОТКЛЮЧ.:', fm_adr: 'Адрес:', fm_char: 'Характер порыва:', fm_not: 'Примечание:', fm_dmo: 'Откл. домов (шт):', fm_w_on: 'Временно с водой', fm_soc: 'Соц. объекты:', fm_ur: 'Юр. лица:', fm_pln: 'План на:', fm_srok: 'Срок (дней/часов):', fm_fact: 'Факт устранения:', fm_kto: 'Кто обнаружил (ФИО):', fm_mst: 'Кто устранил (Мастер):', fm_opr: 'ОПРЕССОВКА', fm_mag: 'МАГИСТРАЛЬ', fm_inv: 'ИНВЕСТ. ПРОГРАММА',
+            btn_save: '+ ДОБАВИТЬ НОВУЮ ЗАПИСЬ', btn_upd: '💾 СОХРАНИТЬ ИЗМЕНЕНИЯ', btn_plan_kap: '+ В ПЛАНОВЫЙ КАП. РЕМОНТ',
+            th_id: 'ID', th_ist: 'Ист.', th_uch: 'Уч.', th_diam: 'Диам.', th_tk: 'ТК', th_obn: 'Обнаруж.', th_otk: 'Отключ.', th_adr: 'Адрес', th_char: 'Характер', th_prim: 'Прим.', th_dom: 'Дома', th_soc: 'Соц.', th_ur: 'Юр.', th_pln: 'План / Срок', th_srk: 'Срок', th_fkt: 'Факт', th_kto: 'Кто обн.', th_mst: 'Мастер', th_voda: 'Без воды / В работе', th_photo: 'Фото', th_act: 'Действия',
+            ac_edit: '✏️ Редакт.', ac_del: '🗑️ Удал.', ac_ok: '✅ Закрыть', ac_kap: '🚧 В Кап.рем', ac_not: '❌ Не наш', ac_end: '✅ Завершить', ac_rev: '↩️ Вернуть', badge_water: '💧 ВОДА ВРЕМЕННО ПОДАНА', badge_mag: 'МАГИСТРАЛЬ', badge_vnutr: 'ВНУТРИКВАРТ.', badge_inv: 'ИНВЕСТ',
+            t_not: 'Не наш', t_wrk: 'В работе:<br>', t_nowt: 'Без воды:<br>',
+            ph_title: '📸 Фотоматериалы', ph_close: 'ЗАКРЫТЬ', ph_warn: '⚠️ ВНИМАНИЕ: Память браузера ограничена! Грузите только самые важные фото (сжатые).', ph_add: 'Добавить фото: ',
+            st_chron: 'Хронология', st_src_all: '(Все источники)', sht: 'шт.', st_ch1: 'Записей за период:', st_ch2: 'Пик порывов пришелся на:', st_ch3: 'Меньше всего порывов было в:',
+            st_op_title: '⚠️ ОПЕРАТИВНАЯ СВОДКА (СЕЙЧАС)', st_op1: 'В работе (Аварии)', st_op2: 'Отключено домов', st_op3: 'Опрессовка (в работе)', st_op4: 'Порывов "Не наших"', st_op5: 'В Кап. ремонте',
+            st_inv_title: '📈 КОНТРОЛЬ ПЛАНОВ И ИНВЕСТ. ПРОГРАММЫ', st_inv1: 'По Инвест. программе', st_inv2: 'Просрочено (Горят сроки)', st_inv3: 'В плане на сегодня/завтра', st_inv4: 'Выполнено в срок (%)',
+            st_c1: 'В работе по Участкам', st_c2: 'В работе по Источникам',
+            st_ar_title: '✅ АНАЛИТИКА АРХИВА (УСТРАНЕНО)', st_ar1: 'Устранено всего', st_ar2: 'Ср. время реакции (до откл.)', st_ar3: 'Ср. время простоя (без воды)',
+            st_c3: 'Устранено по Участкам', st_c4: 'Устранено по Источникам', st_c5: '🏆 Топ мастеров (Устранено)',
+            al_req: 'Укажите дату обнаружения!', al_del1: 'Удалить запись безвозвратно?', al_del2: 'Удалить фото?', al_err: 'Ошибка загрузки файла!', al_ok: '✅ База успешно загружена!', al_bkp: '✅ Бэкап успешно сохранен!', al_auto_cls: 'Указана дата устранения (Факт). Закрыть порыв и перенести в Архив?',
+            m_not: 'Пометить как «НЕ НАШ» и убрать в архив?', m_cls: 'Устранено? Отправить в архив?', m_kap: 'Перевести в Капитальный ремонт?', m_rev: 'Вернуть порыв в работу?',
+            txt_av_kap: 'Аварийный Кап.ремонт', txt_pl_kap: 'Плановый Кап.ремонт', txt_transf: 'Был порыв с {d1}, переведен в кап.рем. {d2}',
+            breakdown_por: 'Порывы:', breakdown_av: 'Авар. Кап.рем:', breakdown_pl: 'План. Кап.рем:',
+            br_mag: 'Магистраль:', br_vnutr: 'Внутрикварт.:',
+            status_ok: '(В срок)', status_ovd: '(ПРОСРОЧЕНО)', status_soon: '(Скоро)', status_late: '(Опоздали)', status_norm: '(В норме)'
+        },
+        'kz': {
+            app_title: 'ҚЖЭК — ДИСПЕТЧЕР СКАДА-сы', dev_cred: 'Әзірлеуші: Зиненко А.В.', base_dt: 'Базаның жүргізілуі:',
+            btn_print: '🖨️ БАСЫП ШЫҒАРУ', btn_backup: '💾 БАЗАНЫ САҚТАУ', btn_import: '📂 ИМПОРТТАУ',
+            tab_act: '⚠️ АҒЫМДАҒЫ АҚАУЛАР', tab_kap: '🚧 КҮРДЕЛІ ЖӨНДЕУ', tab_plan: '🗓️ ЖИЫНТЫҚ ЖОСПАР', tab_cls: '✅ МҰРАҒАТ', tab_stat: '📊 ТАЛДАУ',
+            search_ph: '🔍 Іздеу: мекенжай, құдық, шебер...', flt_all: 'Барлық қазандықтар', flt_from: 'Кезеңнен:', flt_to: 'дейін:',
+            flt_spec_kap: '👉 Тек Күрделі жөндеу', flt_spec_not: '👉 Тек "Біздікі емес"', flt_spec_inv: '👉 Тек Инвест. бағдарлама', flt_spec_overdue: '👉 Тек мерзімі өткендер',
+            srt_def: 'Сұрыптау: Әдепкі (Жаңалары)', srt_plan: 'Сұрыптау: Жоспар күні бойынша', srt_dead: 'Сұрыптау: Дедлайн бойынша', srt_house: 'Сұрыптау: Сөнд. үйлер (Максимум)',
+            fm_src: 'Дереккөз:', fm_uch: 'Учаске:', fm_diam: 'Диаметрі (мм):', fm_tk: 'Құдық (ТК):', fm_dt1: 'Анықталған күні/уақыты:', fm_dt2: 'ӨШІРІЛГЕН күні/уақыты:', fm_adr: 'Мекенжай:', fm_char: 'Ақау сипаты:', fm_not: 'Ескертпе:', fm_dmo: 'Сөнд. үйлер (дана):', fm_w_on: 'Уақытша сумен', fm_soc: 'Әлеум. нысандар:', fm_ur: 'Заңды тұлғалар:', fm_pln: 'Жоспарланған күн:', fm_srok: 'Мерзімі (күн/сағ):', fm_fact: 'Жойылған күні:', fm_kto: 'Кім анықтады (АЖЖ):', fm_mst: 'Кім жойды (Шебер):', fm_opr: 'СЫҒЫМДАУ (Опрессовка)', fm_mag: 'МАГИСТРАЛЬ', fm_inv: 'ИНВЕСТ. БАҒДАРЛАМА',
+            btn_save: '+ ЖАҢА ЖАЗБА ҚОСУ', btn_upd: '💾 ӨЗГЕРІСТЕРДІ САҚТАУ', btn_plan_kap: '+ ЖОСПАРЛЫ КҮР. ЖӨНДЕУГЕ',
+            th_id: 'ID', th_ist: 'Көз', th_uch: 'Уч.', th_diam: 'Диам', th_tk: 'Құдық', th_obn: 'Анықт.', th_otk: 'Өшір.', th_adr: 'Мекенжай', th_char: 'Сипаты', th_prim: 'Ескер.', th_dom: 'Үйлер', th_soc: 'Әлеум', th_ur: 'Заң.т', th_pln: 'Жоспар/Мерзім', th_srk: 'Мерз.', th_fkt: 'Факт', th_kto: 'Анықт.', th_mst: 'Шебер', th_voda: 'Сусыз / Жұмыста', th_photo: 'Фото', th_act: 'Әрекеттер',
+            ac_edit: '✏️ Өңдеу', ac_del: '🗑️ Өшіру', ac_ok: '✅ Жабу', ac_kap: '🚧 Күр.жөндеуге', ac_not: '❌ Біздікі емес', ac_end: '✅ Аяқтау', ac_rev: '↩️ Қайтару', badge_water: '💧 УАҚЫТША СУ БЕРІЛДІ', badge_mag: 'МАГИСТРАЛЬ', badge_vnutr: 'ОРАМ ІШІЛІК', badge_inv: 'ИНВЕСТ',
+            t_not: 'Біздікі емес', t_wrk: 'Жұмыста:<br>', t_nowt: 'Сусыз:<br>',
+            ph_title: '📸 Фотоматериалдар', ph_close: 'ЖАБУ', ph_warn: '⚠️ НАЗАР АУДАРЫҢЫЗ: Браузер жады шектеулі! Тек маңызды (сығылған) фотоларды жүктеңіз.', ph_add: 'Фото қосу: ',
+            st_chron: 'Хронология', st_src_all: '(Барлық дереккөздер)', sht: 'дана', st_ch1: 'Таңдалған кезеңдегі жазбалар:', st_ch2: 'Ақаулардың ең жоғары шегі:', st_ch3: 'Ең аз ақаулар болған ай:',
+            st_op_title: '⚠️ ЖЕДЕЛ МӘЛІМЕТ (ҚАЗІРГІ УАҚЫТТА)', st_op1: 'Жұмыста (Авариялар)', st_op2: 'Өшірілген үйлер', st_op3: 'Сығымдау (жұмыста)', st_op4: '"Біздікі емес" ақаулар', st_op5: 'Күр. жөндеуде',
+            st_inv_title: '📈 ЖОСПАРЛАРДЫ ЖӘНЕ ИНВЕСТ. БАҒДАРЛАМАНЫ БАҚЫЛАУ', st_inv1: 'Инвест. бағдарлама бойынша', st_inv2: 'Мерзімі өтіп кетті', st_inv3: 'Бүгінге/ертеңге жоспарда', st_inv4: 'Уақытында орындалды (%)',
+            st_c1: 'Учаскелер бойынша жұмыста', st_c2: 'Дереккөздер бойынша жұмыста',
+            st_ar_title: '✅ МҰРАҒАТ ТАЛДАУЫ (ЖОЙЫЛҒАН)', st_ar1: 'Барлығы жойылды', st_ar2: 'Орташа әрекет ету уақыты (өшіруге дейін)', st_ar3: 'Орташа бос тұрып қалу уақыты (сусыз)',
+            st_c3: 'Учаскелер бойынша жойылған', st_c4: 'Дереккөздер бойынша жойылған', st_c5: '🏆 Үздік шеберлер (Жойған)',
+            al_req: 'Анықталған күнін көрсетіңіз!', al_del1: 'Жазбаны біржола өшіру керек пе?', al_del2: 'Фотоны өшіру керек пе?', al_err: 'Файлды жүктеу қатесі!', al_ok: '✅ База сәтті жүктелді!', al_bkp: '✅ Бэкап сәтті сақталды!', al_auto_cls: 'Жою күні көрсетілген. Жауып, Мұрағатқа ауыстыру керек пе?',
+            m_not: '«БІЗДІКІ ЕМЕС» деп белгілеп, мұрағатқа жіберу керек пе?', m_cls: 'Жойылды ма? Мұрағатқа жіберу керек пе?', m_kap: 'Күрделі жөндеуге ауыстыру керек пе?', m_rev: 'Ақауды жұмысқа қайтару керек пе?',
+            txt_av_kap: 'Авариялық күр.жөндеу', txt_pl_kap: 'Жоспарлы күр.жөндеу', txt_transf: '{d1} ақау болды, {d2} күр.жөнд.',
+            breakdown_por: 'Ақаулар:', breakdown_av: 'Авар. Күр.жөнд:', breakdown_pl: 'Жосп. Күр.жөнд:',
+            br_mag: 'Магистраль:', br_vnutr: 'Орамішілік:',
+            status_ok: '(Уақытында)', status_ovd: '(МЕРЗІМІ ӨТКЕН)', status_soon: '(Жақында)', status_late: '(Кешікті)', status_norm: '(Қалыпты)'
+        }
+    };
+
+    let currentLang = 'ru';
+    let needsBackup = false; // ФЛАГ ЗАЩИТЫ ОТ ЗАКРЫТИЯ
+
+    function toggleLang() {
+        currentLang = currentLang === 'ru' ? 'kz' : 'ru';
+        const btn = document.getElementById('langBtn');
+        btn.innerHTML = currentLang === 'ru' ? '🇰🇿 ҚАЗ' : '🇷🇺 РУС';
+        btn.style.background = currentLang === 'ru' ? '#f39c12' : '#3498db';
+        
+        document.querySelectorAll('[data-lang]').forEach(el => {
+            const key = el.getAttribute('data-lang');
+            if(dict[currentLang][key]) el.innerText = dict[currentLang][key];
+        });
+        
+        document.querySelectorAll('[data-placeholder]').forEach(el => {
+            const key = el.getAttribute('data-placeholder');
+            if(dict[currentLang][key]) el.placeholder = dict[currentLang][key];
+        });
+
+        if (editState) {
+            document.getElementById('main-btn').innerText = dict[currentLang]['btn_upd'];
+            document.getElementById('plan-kap-btn').style.display = 'none';
+        } else {
+            document.getElementById('main-btn').innerText = dict[currentLang]['btn_save'];
+            document.getElementById('plan-kap-btn').style.display = 'block';
+            document.getElementById('plan-kap-btn').innerText = dict[currentLang]['btn_plan_kap'];
+        }
+
+        render(); 
+    }
+
+    let db = JSON.parse(localStorage.getItem('ktek_scada_v42')) || { act: [], kap: [], cls: [], counter: 1 };
+    let editState = null;
+    let currentPhotoObj = null;
+
+    const monthNames = {
+        'ru': ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"],
+        'kz': ["Қаңтар", "Ақпан", "Наурыз", "Сәуір", "Мамыр", "Маусым", "Шілде", "Тамыз", "Қыркүйек", "Қазан", "Қараша", "Желтоқсан"]
+    };
+
+    function safeDateMs(dStr) {
+        if (!dStr) return 0;
+        let d = new Date(dStr);
+        if (!isNaN(d.getTime())) return d.getTime();
+        
+        let match = String(dStr).match(/(\d{1,2})\D+(\d{1,2})\D+(\d{2,4})/);
+        if(match) {
+            let y = parseInt(match[3], 10);
+            if(y < 100) y += 2000;
+            let d2 = new Date(y, parseInt(match[2], 10)-1, parseInt(match[1], 10));
+            if (!isNaN(d2.getTime())) return d2.getTime();
+        }
+        return 0;
+    }
+
+    function getDeadlineTime(v13, v14) {
+        if(!v13) return 0;
+        let d = new Date(v13);
+        d.setHours(0,0,0,0);
+        let days = parseInt(v14, 10);
+        if(!isNaN(days) && days > 0) d.setDate(d.getDate() + days);
+        return d.getTime();
+    }
+
+    function switchTab(tabId) {
+        document.querySelectorAll('.tab-content, .tab-btn').forEach(el => el.classList.remove('active'));
+        document.getElementById('tab-' + tabId).classList.add('active');
+        
+        if(tabId === 'stat') document.getElementById('input-block').style.display = 'none';
+        else document.getElementById('input-block').style.display = 'grid';
+        
+        document.querySelector(`.tab-btn[onclick="switchTab('${tabId}')"]`).classList.add('active');
+        render();
+    }
+
+    function setFilter(val) {
+        document.getElementById('filter-src').value = val;
+        switchTab('act');
+    }
+
+    function calcTimeStr(date1, date2) {
+        let t1 = safeDateMs(date1);
+        if(t1 === 0) return "-";
+        let t2 = date2 ? safeDateMs(date2) : Date.now();
+        if(t2 === 0) t2 = Date.now();
+        let diffMs = t2 - t1;
+        if (diffMs <= 0) return "0 " + (currentLang==='ru'?'ч.':'сағ.');
+        let h = Math.floor(diffMs / 3600000);
+        let d = Math.floor(h / 24);
+        let remH = h % 24;
+        let d_str = currentLang === 'ru' ? 'дн.' : 'күн';
+        let h_str = currentLang === 'ru' ? 'ч.' : 'сағ.';
+        if (d > 0) return `${d} ${d_str} ${remH} ${h_str}`;
+        return `${h} ${h_str}`;
+    }
+
+    function getDiffMs(d1, d2) {
+        let t1 = safeDateMs(d1); let t2 = safeDateMs(d2);
+        if(t1 === 0 || t2 === 0) return 0;
+        let diff = t2 - t1;
+        return diff > 0 ? diff : 0;
+    }
+
+    function saveEntry(isPlan = false) {
+        let entry = {};
+        ['v2','v3','v4','v5','v6','v7','v8','v9','v10','v11','v12','v13','v14','v15','v17','v18'].forEach(k => {
+            let el = document.getElementById(k);
+            if(el) entry[k] = el.value;
+        });
+        entry.diam = document.getElementById('v-diam').value;
+        entry.isOpres = document.getElementById('is-opres').checked;
+        entry.isWaterOn = document.getElementById('is-water-on').checked;
+        entry.isMagistral = document.getElementById('is-magistral').checked;
+        entry.isInvest = document.getElementById('is-invest').checked;
+        entry.photos = [];
+
+        if (editState) {
+            let targetType = editState.type;
+            
+            if (entry.v15 && (targetType === 'act' || targetType === 'kap')) {
+                if (confirm(dict[currentLang]['al_auto_cls'])) {
+                    targetType = 'cls';
+                    entry.isNotOurs = false;
+                }
+            }
+
+            entry.id = db[editState.type][editState.index].id;
+            entry.isKap = db[editState.type][editState.index].isKap;
+            entry.isPlanKap = db[editState.type][editState.index].isPlanKap;
+            entry.transferDate = db[editState.type][editState.index].transferDate;
+            entry.isNotOurs = db[editState.type][editState.index].isNotOurs;
+            entry.photos = db[editState.type][editState.index].photos || [];
+            
+            if (targetType !== editState.type) {
+                db[targetType].unshift(entry);
+                db[editState.type].splice(editState.index, 1);
+            } else {
+                db[editState.type][editState.index] = entry;
+            }
+
+            editState = null;
+            document.getElementById('main-btn').innerText = dict[currentLang]['btn_save'];
+            document.getElementById('main-btn').style.background = "#2e7d32";
+            document.getElementById('plan-kap-btn').style.display = 'block';
+        } else {
+            if(!entry.v5) return alert(dict[currentLang]['al_req']);
+            entry.id = db.counter++;
+            entry.isNotOurs = false;
+            
+            if (entry.v15 && confirm(dict[currentLang]['al_auto_cls'])) {
+                db.cls.unshift(entry);
+            } else {
+                if(isPlan) {
+                    entry.isKap = true;
+                    entry.isPlanKap = true; 
+                    db.kap.unshift(entry);
+                } else {
+                    db.act.unshift(entry);
+                }
+            }
+        }
+        
+        saveAndRender();
+        ['v-diam','v3','v5','v6','v7','v8','v9','v10','v11','v12','v13','v14','v15','v17','v18'].forEach(id => document.getElementById(id).value = '');
+        document.getElementById('is-opres').checked = false;
+        document.getElementById('is-water-on').checked = false;
+        document.getElementById('is-magistral').checked = false;
+        document.getElementById('is-invest').checked = false;
+    }
+
+    function editRow(type, idx) {
+        let item = db[type][idx];
+        if(!item) return;
+        ['v2','v3','v4','v5','v6','v7','v8','v9','v10','v11','v12','v13','v14','v15','v17','v18'].forEach(k => {
+            if(document.getElementById(k)) document.getElementById(k).value = item[k] || "";
+        });
+        document.getElementById('v-diam').value = item.diam || "";
+        document.getElementById('is-opres').checked = !!item.isOpres;
+        if(document.getElementById('is-water-on')) document.getElementById('is-water-on').checked = !!item.isWaterOn;
+        if(document.getElementById('is-magistral')) document.getElementById('is-magistral').checked = !!item.isMagistral;
+        if(document.getElementById('is-invest')) document.getElementById('is-invest').checked = !!item.isInvest;
+        
+        editState = { type: type, index: idx };
+        document.getElementById('main-btn').innerText = dict[currentLang]['btn_upd'];
+        document.getElementById('main-btn').style.background = "#ff9800";
+        document.getElementById('plan-kap-btn').style.display = 'none'; 
+        
+        let tabToSwitch = type === 'kap' ? 'kap' : (type === 'cls' ? 'cls' : 'act');
+        if(document.getElementById('tab-plan').classList.contains('active')) tabToSwitch = 'plan';
+        switchTab(tabToSwitch); 
+        window.scrollTo(0,0);
+    }
+
+    function moveRow(idx, fromType, toType, flag = null) {
+        let confirmMsg = "";
+        if(flag === 'notOurs') confirmMsg = dict[currentLang]['m_not'];
+        else if(toType === 'cls') confirmMsg = dict[currentLang]['m_cls'];
+        else if(toType === 'kap') confirmMsg = dict[currentLang]['m_kap'];
+        else confirmMsg = dict[currentLang]['m_rev'];
+
+        if(confirm(confirmMsg)) {
+            let item = db[fromType].splice(idx, 1)[0];
+            
+            if(flag === 'notOurs') {
+                item.isNotOurs = true;
+                if(!item.v15) item.v15 = new Date().toISOString().slice(0,16);
+                db.cls.unshift(item);
+            } 
+            else if(toType === 'cls') {
+                item.isNotOurs = false;
+                if(!item.v15) item.v15 = new Date().toISOString().slice(0,16);
+                db.cls.unshift(item);
+            } 
+            else if(toType === 'kap') {
+                item.isKap = true;
+                item.isPlanKap = false; 
+                item.transferDate = new Date().toISOString(); 
+                db.kap.unshift(item);
+            }
+            else { 
+                item.isNotOurs = false;
+                db.act.unshift(item);
+            }
+            saveAndRender();
+        }
+    }
+
+    function delRow(type, idx) {
+        if(confirm(dict[currentLang]['al_del1'])) {
+            db[type].splice(idx, 1);
+            saveAndRender();
+        }
+    }
+
+    function selectRow(rowEl) {
+        document.querySelectorAll('tr').forEach(r => r.classList.remove('selected-row'));
+        rowEl.classList.add('selected-row');
+    }
+
+    function openPhotosLocal(type, idx) {
+        currentPhotoObj = db[type][idx];
+        if(!currentPhotoObj || !currentPhotoObj.photos) currentPhotoObj.photos = [];
+        document.getElementById('photo-viewer').style.display = 'block';
+        drawPhotos();
+    }
+    function drawPhotos() {
+        const grid = document.getElementById('photo-display'); grid.innerHTML = '';
+        currentPhotoObj.photos.forEach((p, i) => {
+            grid.insertAdjacentHTML('beforeend', `<div style="position:relative;"><img src="${p}"><button onclick="delPhoto(${i})" style="position:absolute; top:5px; right:5px; background:red; color:white; border:none; border-radius:50%; cursor:pointer;">X</button></div>`);
+        });
+    }
+    function uploadPhotoLocal() {
+        const file = document.getElementById('file-input').files[0];
+        if(!file) return;
+        const reader = new FileReader();
+        reader.onload = e => { currentPhotoObj.photos.push(e.target.result); saveAndRender(); drawPhotos(); document.getElementById('file-input').value = ''; };
+        reader.readAsDataURL(file);
+    }
+    function delPhoto(idx) { if(confirm(dict[currentLang]['al_del2'])) { currentPhotoObj.photos.splice(idx, 1); saveAndRender(); drawPhotos(); } }
+
+    function saveAndRender() { 
+        localStorage.setItem('ktek_scada_v42', JSON.stringify(db)); 
+        render(); 
+        needsBackup = true; // --- ЗАЩИТА: База изменилась ---
+    }
+
+    async function exportDB() {
+        const blob = new Blob([JSON.stringify(db, null, 2)], { type: "application/json" });
+        const defaultName = `ktek_backup_${new Date().toLocaleDateString('ru-RU')}.json`;
+        try {
+            if (window.showSaveFilePicker) {
+                const handle = await window.showSaveFilePicker({ suggestedName: defaultName, types: [{ description: 'JSON File', accept: {'application/json': ['.json']} }] });
+                const writable = await handle.createWritable();
+                await writable.write(blob); await writable.close();
+                alert(dict[currentLang]['al_bkp']);
+                needsBackup = false; // --- ЗАЩИТА СНЯТА: Бэкап сделан ---
+            } else { throw new Error("API not supported"); }
+        } catch (err) {
+            const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = defaultName; link.click();
+            needsBackup = false; // --- ЗАЩИТА СНЯТА: Бэкап сделан ---
+        }
+    }
+
+    function importDB(event) {
+        const file = event.target.files[0];
+        if(!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try { 
+                let data = JSON.parse(e.target.result); 
+                if(data.act || data.cls) { 
+                    db = data; 
+                    saveAndRender(); 
+                    alert(dict[currentLang]['al_ok']); 
+                    needsBackup = false; // --- ЗАЩИТА СНЯТА: После импорта база свежая ---
+                }
+            } 
+            catch(err) { alert(dict[currentLang]['al_err']); }
+        };
+        reader.readAsText(file);
+    }
+
+    // --- БЛОКИРОВКА ЗАКРЫТИЯ ВКЛАДКИ ---
+    window.addEventListener('beforeunload', function (e) {
+        if (needsBackup) {
+            e.preventDefault();
+            e.returnValue = 'Вы внесли изменения, но не сделали БЭКАП БАЗЫ! Данные могут потеряться. Точно выйти?';
+        }
+    });
+
+    function updateGlobalStartDate() {
+        let minMs = Infinity;
+        [...(db.act||[]), ...(db.kap||[]), ...(db.cls||[])].forEach(r => {
+            if(!r) return;
+            let t = safeDateMs(r.v5);
+            if (t > 0 && t < minMs) minMs = t;
+        });
+        document.getElementById('global-start-date').innerText = (minMs !== Infinity) ? new Date(minMs).toLocaleDateString('ru-RU') : "Нет данных";
+    }
+
+    // ЛОГИКА СЕКРЕТНОЙ ПЕЧАТИ ДЛЯ РУКОВОДСТВА
+    function printSpecial() {
+        let rawFilter = document.getElementById('filter-src').value;
+        let isSpecKap = (rawFilter === 'SPEC_KAP');
+        let isSpecInv = (rawFilter === 'SPEC_INV');
+        let isSpecOverdue = (rawFilter === 'SPEC_OVERDUE');
+        let isSpecNot = (rawFilter === 'SPEC_NOT');
+        let filterSrc = (isSpecKap || isSpecInv || isSpecOverdue || isSpecNot) ? "" : rawFilter;
+        let searchQuery = document.getElementById('searchInput').value.toLowerCase();
+        let dStartStr = document.getElementById('filter-date-start').value;
+        let dEndStr = document.getElementById('filter-date-end').value;
+
+        // Берем данные из всех рабочих вкладок (Текущие, Капремонт, Архив)
+        let items = [...db.act, ...db.kap, ...db.cls].filter(r => {
+            if(r.isNotOurs) return false;
+            if(filterSrc && r.v2 !== filterSrc) return false;
+            if(isSpecKap && !r.isKap) return false;
+            if(isSpecInv && !r.isInvest) return false;
+
+            // Фильтр по дате обнаружения (v5)
+            if(dStartStr || dEndStr) {
+                let t = safeDateMs(r.v5);
+                if (t === 0) return false; 
+                if (dStartStr && t < new Date(dStartStr).getTime()) return false;
+                if (dEndStr && t > new Date(dEndStr + "T23:59:59").getTime()) return false;
+            }
+            let rowText = `${r.v3||''} ${r.v7||''} ${r.v8||''} ${r.v9||''} ${r.v18||''} ${r.v4||''}`.toLowerCase();
+            if(searchQuery && !rowText.includes(searchQuery)) return false;
+
+            return true;
+        });
+
+        // Сортировка внутри отчета (по дате обнаружения)
+        items.sort((a, b) => safeDateMs(a.v5) - safeDateMs(b.v5));
+
+        // Подсчет статистики для шапки
+        let totalCount = items.length;
+        let opresCount = items.filter(r => r.isOpres).length;
+        let kapCount = items.filter(r => r.isKap).length;
+        let currentNonOpresCount = items.filter(r => !r.isOpres && !r.isKap).length;
+
+        let periodText = (dStartStr || dEndStr) ? `с ${dStartStr ? new Date(dStartStr).toLocaleDateString('ru-RU') : '...'} по ${dEndStr ? new Date(dEndStr).toLocaleDateString('ru-RU') : '...'}` : 'за весь период';
+
+        let bySource = {};
+        items.forEach(r => {
+            let s = r.v2 || 'Не указан';
+            if(!bySource[s]) bySource[s] = [];
+            bySource[s].push(r);
+        });
+
+        let html = `<h2 style="text-align:center; font-family:'Times New Roman', serif; font-size:16pt; margin-bottom: 5px; line-height: 1.2;">
+            ОТЧЕТ ПО ПОРЫВАМ ГКП «КТЭК»<br>
+            <span style="font-size:12pt; font-weight:normal;">Период: ${periodText}</span>
+        </h2>`;
+        
+        html += `<div style="font-family:'Times New Roman', serif; font-size:12pt; margin-bottom: 15px; border: 1px solid #000; padding: 10px; display: inline-block;">
+            <b>Всего выявлено за период: ${totalCount} шт.</b><br>
+            Из них после опрессовки: ${opresCount} шт.<br>
+            Вне опрессовки (текущие): ${currentNonOpresCount} шт.<br>
+            В капитальном ремонте: ${kapCount} шт.
+        </div>`;
+        
+        html += `<table style="width:100%; border-collapse:collapse; font-family:'Times New Roman', serif; font-size:11pt; border: 1px solid black;" border="1">
+            <thead>
+                <tr style="background-color: #f2f2f2;">
+                    <th style="padding: 5px; border: 1px solid black; width: 30px;">№</th>
+                    <th style="padding: 5px; border: 1px solid black; width: 70px;">Дата обн.</th>
+                    <th style="padding: 5px; border: 1px solid black;">Адрес порыва</th>
+                    <th style="padding: 5px; border: 1px solid black;">Характер порыва</th>
+                    <th style="padding: 5px; border: 1px solid black; width: 60px;">Откл. МЖД</th>
+                    <th style="padding: 5px; border: 1px solid black; width: 70px;">План устран.</th>
+                    <th style="padding: 5px; border: 1px solid black; width: 70px;">Факт устран.</th>
+                    <th style="padding: 5px; border: 1px solid black; width: 100px;">Статус / Отклонение</th>
+                </tr>
+            </thead>
+            <tbody>`;
+
+        let today = new Date();
+        today.setHours(0,0,0,0);
+
+        for (let src in bySource) {
+            html += `<tr><td colspan="8" style="padding: 5px; border: 1px solid black; font-weight: bold; font-style: italic; background-color: #fafafa;">Теплосети: ${src}</td></tr>`;
+            
+            let srcCount = 0;
+            bySource[src].forEach(r => {
+                srcCount++;
+                let dateObn = r.v5 ? new Date(r.v5).toLocaleDateString('ru-RU', {day:'2-digit', month:'2-digit', year:'2-digit'}) : '';
+                let charText = r.v8 || '';
+                if(r.v9) charText += ` (${r.v9})`;
+                
+                let planText = r.v13 ? new Date(r.v13).toLocaleDateString('ru-RU', {day:'2-digit', month:'2-digit', year:'2-digit'}) : '';
+                let factText = r.v15 ? new Date(r.v15).toLocaleDateString('ru-RU', {day:'2-digit', month:'2-digit', year:'2-digit'}) : '';
+
+                // Логика расчета отклонений
+                let statusHtml = '';
+                if (!r.v13) {
+                    statusHtml = '<i>План не задан</i>';
+                } else {
+                    let dlTime = getDeadlineTime(r.v13, r.v14);
+                    let dlDate = new Date(dlTime);
+                    dlDate.setHours(0,0,0,0);
+
+                    if (!r.v15) { // Еще не устранено
+                        let diffDays = Math.floor((today.getTime() - dlDate.getTime()) / (1000*3600*24));
+                        if (diffDays > 0) {
+                            statusHtml = `<b style="color:#d32f2f;">ПРОСРОЧЕНО на ${diffDays} дн.</b>`;
+                        } else {
+                            statusHtml = `В работе`;
+                        }
+                    } else { // Устранено (есть факт)
+                        let factDate = new Date(r.v15);
+                        factDate.setHours(0,0,0,0);
+                        let diffDays = Math.floor((factDate.getTime() - dlDate.getTime()) / (1000*3600*24));
+                        
+                        if (diffDays > 0) {
+                            statusHtml = `<b style="color:#8e0000;">Опоздание на ${diffDays} дн.</b>`;
+                        } else if (diffDays < 0) {
+                            statusHtml = `<b style="color:#2e7d32;">Опережение на ${Math.abs(diffDays)} дн.</b>`;
+                        } else {
+                            statusHtml = `<b>Точно в срок</b>`;
+                        }
+                    }
+                }
+
+                html += `<tr>
+                    <td style="padding: 5px; border: 1px solid black; text-align: center;">${srcCount}</td>
+                    <td style="padding: 5px; border: 1px solid black; text-align: center;">${dateObn}</td>
+                    <td style="padding: 5px; border: 1px solid black;">${r.v7 || ''}</td>
+                    <td style="padding: 5px; border: 1px solid black;">${charText}</td>
+                    <td style="padding: 5px; border: 1px solid black; text-align: center;">${r.v10 || ''}</td>
+                    <td style="padding: 5px; border: 1px solid black; text-align: center;">${planText}</td>
+                    <td style="padding: 5px; border: 1px solid black; text-align: center; font-weight: bold;">${factText}</td>
+                    <td style="padding: 5px; border: 1px solid black; text-align: center;">${statusHtml}</td>
+                </tr>`;
+            });
+            html += `<tr><td colspan="8" style="padding: 5px; border: 1px solid black; font-weight: bold; text-align: right;">Итого по ${src}: ${srcCount} порывов</td></tr>`;
+        }
+
+        html += `</tbody></table>`;
+
+        document.getElementById('special-print-area').innerHTML = html;
+        document.body.classList.add('print-special');
+        setTimeout(() => {
+            window.print();
+            setTimeout(() => { document.body.classList.remove('print-special'); }, 500);
+        }, 100);
+    }
+
+    function updateAnalytics(dStartStr, dEndStr, rawFilter) {
+        let isSpecKap = (rawFilter === 'SPEC_KAP');
+        let isSpecInv = (rawFilter === 'SPEC_INV');
+        let isSpecOverdue = (rawFilter === 'SPEC_OVERDUE');
+        let isSpecNot = (rawFilter === 'SPEC_NOT');
+        let filterSrc = (isSpecKap || isSpecInv || isSpecOverdue || isSpecNot) ? "" : rawFilter;
+
+        let filterText = dict[currentLang]['st_src_all'];
+        if (isSpecKap) filterText = dict[currentLang]['flt_spec_kap'];
+        else if (isSpecInv) filterText = dict[currentLang]['flt_spec_inv'];
+        else if (isSpecOverdue) filterText = dict[currentLang]['flt_spec_overdue'];
+        else if (isSpecNot) filterText = dict[currentLang]['flt_spec_not'];
+        else if (filterSrc) filterText = `(${dict[currentLang]['fm_src']} ${filterSrc})`;
+
+        document.getElementById('stat-title-source').innerText = filterText;
+
+        let todayStart = new Date();
+        todayStart.setHours(0,0,0,0);
+        let tomorrowStart = new Date(todayStart);
+        tomorrowStart.setDate(tomorrowStart.getDate() + 1);
+
+        const isMatch = (r, type) => {
+            if(!r) return false;
+            if(filterSrc && r.v2 !== filterSrc) return false;
+            if(isSpecKap && type !== 'kap') return false;
+            if(isSpecNot && !r.isNotOurs) return false;
+            if(isSpecInv && !r.isInvest) return false;
+            
+            if(isSpecOverdue) {
+                if(r.isNotOurs || type === 'cls') return false;
+                let dl = getDeadlineTime(r.v13, r.v14);
+                if(dl === 0 || dl >= todayStart.getTime() || r.v15) return false;
+            }
+            
+            if(dStartStr || dEndStr) {
+                let t = safeDateMs(r.v5);
+                if (t === 0) return false; 
+                if (dStartStr && t < new Date(dStartStr).getTime()) return false;
+                if (dEndStr && t > new Date(dEndStr + "T23:59:59").getTime()) return false;
+            }
+            return true;
+        };
+
+        let actF = (db.act||[]).filter(r => isMatch(r, 'act'));
+        let kapF = (db.kap||[]).filter(r => isMatch(r, 'kap'));
+        let clsF = (db.cls||[]).filter(r => isMatch(r, 'cls'));
+        
+        let allMatching = [...actF, ...kapF, ...clsF];
+        document.getElementById('stat-total-all').innerText = allMatching.length;
+
+        let monthCounts = {};
+        allMatching.forEach(r => {
+            let t = safeDateMs(r.v5);
+            if (t > 0) {
+                let d = new Date(t);
+                let mStr = d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2, '0');
+                monthCounts[mStr] = (monthCounts[mStr] || 0) + 1;
+            }
+        });
+
+        let peakM = "-", minM = "-"; let maxC = -1, minC = 999999;
+        for(let m in monthCounts) {
+            if(monthCounts[m] > maxC) { maxC = monthCounts[m]; peakM = m; }
+            if(monthCounts[m] < minC) { minC = monthCounts[m]; minM = m; }
+        }
+
+        if(maxC > -1) {
+            let pParts = peakM.split('-'); document.getElementById('stat-peak-month').innerText = monthNames[currentLang][parseInt(pParts[1])-1] + " " + pParts[0];
+            document.getElementById('stat-peak-count').innerText = maxC;
+            let mParts = minM.split('-'); document.getElementById('stat-min-month').innerText = monthNames[currentLang][parseInt(mParts[1])-1] + " " + mParts[0];
+            document.getElementById('stat-min-count').innerText = minC;
+        }
+
+        let actMag = 0, actVnutr = 0;
+        actF.forEach(r => {
+            if(!r.isNotOurs) {
+                if(r.isMagistral) actMag++; else actVnutr++;
+            }
+        });
+
+        document.getElementById('stat-act').innerText = actF.filter(r => !r.isNotOurs).length;
+        document.getElementById('stat-act-breakdown').innerHTML = `
+            <div>- ${dict[currentLang]['br_mag']} <b>${actMag}</b></div>
+            <div>- ${dict[currentLang]['br_vnutr']} <b>${actVnutr}</b></div>
+        `;
+        document.getElementById('stat-opres').innerText = actF.filter(r => !r.isNotOurs && r.isOpres).length;
+        
+        let clsMag = 0, clsVnutr = 0;
+        clsF.forEach(r => {
+            if(!r.isNotOurs) {
+                if(r.isMagistral) clsMag++; else clsVnutr++;
+            }
+        });
+
+        document.getElementById('stat-cls').innerText = clsF.filter(r => !r.isNotOurs).length;
+        document.getElementById('stat-cls-breakdown').innerHTML = `
+            <div>- ${dict[currentLang]['br_mag']} <b>${clsMag}</b></div>
+            <div>- ${dict[currentLang]['br_vnutr']} <b>${clsVnutr}</b></div>
+        `;
+        document.getElementById('stat-not-ours').innerText = actF.filter(r => r.isNotOurs).length + clsF.filter(r => r.isNotOurs).length;
+
+        let hAct = 0, hKapAv = 0, hKapPl = 0;
+        let kAv = 0, kPl = 0;
+
+        actF.forEach(r => { 
+            if(!r.isNotOurs && r.v10 && !r.isWaterOn) hAct += parseInt(r.v10) || 0; 
+        });
+        kapF.forEach(r => { 
+            if(r.isNotOurs) return;
+            if(r.isPlanKap) {
+                kPl++;
+                if(r.v10 && !r.isWaterOn) hKapPl += parseInt(r.v10) || 0;
+            } else {
+                kAv++;
+                if(r.v10 && !r.isWaterOn) hKapAv += parseInt(r.v10) || 0;
+            }
+        });
+        
+        document.getElementById('stat-kap-total').innerText = kapF.filter(r => !r.isNotOurs).length;
+        document.getElementById('stat-kap-breakdown').innerHTML = `
+            <div>- ${dict[currentLang]['breakdown_av']} <b>${kAv}</b></div>
+            <div>- ${dict[currentLang]['breakdown_pl']} <b>${kPl}</b></div>
+        `;
+
+        document.getElementById('stat-houses').innerText = (hAct + hKapAv + hKapPl);
+        document.getElementById('stat-houses-breakdown').innerHTML = `
+            <div>- ${dict[currentLang]['breakdown_por']} <b>${hAct}</b></div>
+            <div>- ${dict[currentLang]['breakdown_av']} <b>${hKapAv}</b></div>
+            <div>- ${dict[currentLang]['breakdown_pl']} <b>${hKapPl}</b></div>
+        `;
+
+        // --- БЛОК: СРОКИ И ИНВЕСТ ---
+        let invCount = 0;
+        let overdueCount = 0;
+        let soonCount = 0;
+        let completedWithPlan = 0;
+        let completedOnTime = 0;
+
+        allMatching.forEach(r => {
+            let isActive = (actF.includes(r) || kapF.includes(r));
+            if (isActive && r.isInvest) invCount++;
+
+            let dlTime = getDeadlineTime(r.v13, r.v14);
+            if (dlTime > 0) {
+                if (!r.v15) { 
+                    if (isActive && !r.isNotOurs) { 
+                        if (dlTime < todayStart.getTime()) {
+                            overdueCount++;
+                        } else if (dlTime === todayStart.getTime() || dlTime === tomorrowStart.getTime()) {
+                            soonCount++;
+                        }
+                    }
+                } else { 
+                    if (!r.isNotOurs) {
+                        completedWithPlan++;
+                        let factDate = new Date(r.v15);
+                        factDate.setHours(0,0,0,0);
+                        if (factDate.getTime() <= dlTime + 86400000) { 
+                            completedOnTime++;
+                        }
+                    }
+                }
+            }
+        });
+
+        document.getElementById('stat-invest').innerText = invCount;
+        document.getElementById('stat-overdue').innerText = overdueCount;
+        document.getElementById('stat-soon').innerText = soonCount;
+
+        let onTimePct = completedWithPlan > 0 ? Math.round((completedOnTime / completedWithPlan) * 100) : 0;
+        document.getElementById('stat-ontime-pct').innerText = onTimePct + "%";
+
+        let totalReactionMs = 0; let countReaction = 0;
+        let totalDowntimeMs = 0; let countDowntime = 0;
+
+        clsF.forEach(r => {
+            if(r.isNotOurs) return;
+            let diffReact = getDiffMs(r.v5, r.v6);
+            if(diffReact > 0) { totalReactionMs += diffReact; countReaction++; }
+            let diffDown = getDiffMs(r.v6, r.v15);
+            if(diffDown > 0) { totalDowntimeMs += diffDown; countDowntime++; }
+        });
+        
+        let avgReactHrs = countReaction > 0 ? ((totalReactionMs / countReaction) / 3600000).toFixed(1) : 0;
+        let avgDownHrs = countDowntime > 0 ? ((totalDowntimeMs / countDowntime) / 3600000).toFixed(1) : 0;
+        
+        let hrText = currentLang === 'ru' ? 'час.' : 'сағ.';
+        document.getElementById('stat-reaction').innerHTML = avgReactHrs + ` <span style="font-size:12px;">${hrText}</span>`;
+        document.getElementById('stat-downtime').innerHTML = avgDownHrs + ` <span style="font-size:12px;">${hrText}</span>`;
+
+        let uStatAct = {}; let iStatAct = {};
+        actF.forEach(r => {
+            if(r.isNotOurs) return;
+            let u = (r.v4 || '').trim() || (currentLang==='ru'?'Не указан':'Көрсетілмеген'); 
+            let src = (r.v2 || '').trim() || (currentLang==='ru'?'Не указан':'Көрсетілмеген');
+            uStatAct[u] = (uStatAct[u] || 0) + 1; iStatAct[src] = (iStatAct[src] || 0) + 1;
+        });
+
+        let uStatCls = {}; let iStatCls = {}; let mStatCls = {};
+        clsF.forEach(r => {
+            if(r.isNotOurs) return;
+            let u = (r.v4 || '').trim() || (currentLang==='ru'?'Не указан':'Көрсетілмеген'); 
+            let src = (r.v2 || '').trim() || (currentLang==='ru'?'Не указан':'Көрсетілмеген');
+            let master = (r.v18 || '').trim();
+            uStatCls[u] = (uStatCls[u] || 0) + 1; iStatCls[src] = (iStatCls[src] || 0) + 1;
+            if(master !== '') mStatCls[master] = (mStatCls[master] || 0) + 1;
+        });
+
+        const buildList = (obj, targetId) => {
+            let keys = Object.keys(obj).sort((a,b) => obj[b] - obj[a]); 
+            if(keys.length === 0) { document.getElementById(targetId).innerHTML = `<div style="color:#888; padding:10px 0; text-align:center;">${currentLang==='ru'?'Нет данных':'Деректер жоқ'}</div>`; return; }
+            let shtText = dict[currentLang]['sht'];
+            let html = keys.map(k => `<div class="chart-row"><span>${k}</span> <span>${obj[k]} ${shtText}</span></div>`).join('');
+            document.getElementById(targetId).innerHTML = html;
+        };
+
+        buildList(uStatAct, 'chart-uchastok'); buildList(iStatAct, 'chart-istochnik');
+        buildList(uStatCls, 'chart-uchastok-cls'); buildList(iStatCls, 'chart-istochnik-cls');
+        buildList(mStatCls, 'chart-masters');
+    }
+
+    function render() {
+        updateGlobalStartDate();
+        let searchQuery = document.getElementById('searchInput').value.toLowerCase();
+        let rawFilter = document.getElementById('filter-src').value;
+        let dStartStr = document.getElementById('filter-date-start').value;
+        let dEndStr = document.getElementById('filter-date-end').value;
+        let sortVal = document.getElementById('sort-select').value;
+
+        let isSpecKap = (rawFilter === 'SPEC_KAP');
+        let isSpecInv = (rawFilter === 'SPEC_INV');
+        let isSpecOverdue = (rawFilter === 'SPEC_OVERDUE');
+        let isSpecNot = (rawFilter === 'SPEC_NOT');
+        let filterSrc = (isSpecKap || isSpecInv || isSpecOverdue || isSpecNot) ? "" : rawFilter;
+
+        let d = dict[currentLang];
+        const headersLocal = `<th>${d.th_id}</th><th>${d.th_ist}</th><th>${d.th_uch}</th><th>${d.th_diam}</th><th>${d.th_tk}</th><th>${d.th_obn}</th><th>${d.th_otk}</th><th style="width:120px">${d.th_adr}</th><th>${d.th_char}</th><th>${d.th_prim}</th><th>${d.th_dom}</th><th>${d.th_soc}</th><th>${d.th_ur}</th><th>${d.th_pln}</th><th>${d.th_srk}</th><th>${d.th_fkt}</th><th>${d.th_kto}</th><th>${d.th_mst}</th><th>${d.th_voda}</th><th class="no-print">${d.th_photo}</th>`;
+
+        document.getElementById('th-row-act').innerHTML = headersLocal + `<th class="no-print" style="width:80px">${d.th_act}</th>`;
+        document.getElementById('th-row-kap').innerHTML = headersLocal + `<th class="no-print" style="width:65px">${d.th_act}</th>`;
+        document.getElementById('th-row-plan').innerHTML = headersLocal + `<th class="no-print" style="width:80px">${d.th_act}</th>`;
+        document.getElementById('th-row-cls').innerHTML = headersLocal + `<th class="no-print" style="width:65px">${d.th_act}</th>`;
+
+        let todayStart = new Date();
+        todayStart.setHours(0,0,0,0);
+        let tomorrowStart = new Date(todayStart);
+        tomorrowStart.setDate(tomorrowStart.getDate() + 1);
+
+        const applySort = (arr) => {
+            if (sortVal === '') return arr; 
+            return arr.sort((a, b) => {
+                let rA = a.item; let rB = b.item;
+                if (sortVal === 'plan') {
+                    let tA = safeDateMs(rA.v13) || 99999999999999;
+                    let tB = safeDateMs(rB.v13) || 99999999999999;
+                    return tA - tB;
+                }
+                if (sortVal === 'deadline') {
+                    let dA = getDeadlineTime(rA.v13, rA.v14) || 99999999999999;
+                    let dB = getDeadlineTime(rB.v13, rB.v14) || 99999999999999;
+                    return dA - dB;
+                }
+                if (sortVal === 'houses') {
+                    let hA = parseInt(rA.v10) || 0;
+                    let hB = parseInt(rB.v10) || 0;
+                    return hB - hA;
+                }
+                return 0;
+            });
+        };
+
+        const draw = (bodyId, list, typeFallback) => {
+            let html = '';
+            let visibleCount = 0;
+            
+            list.forEach((mapObj) => {
+                let r = mapObj.item;
+                let i = mapObj.origIdx;
+                let type = mapObj.type || typeFallback;
+                
+                if(!r) return; 
+                
+                if(filterSrc && r.v2 !== filterSrc) return;
+                if(isSpecKap && type !== 'kap') return;
+                if(isSpecNot && !r.isNotOurs) return;
+                if(isSpecInv && !r.isInvest) return;
+
+                if(isSpecOverdue) {
+                    if(r.isNotOurs || type === 'cls') return;
+                    let dl = getDeadlineTime(r.v13, r.v14);
+                    if(dl === 0 || dl >= todayStart.getTime() || r.v15) return;
+                }
+
+                if(dStartStr || dEndStr) {
+                    let t = safeDateMs(r.v5);
+                    if (t === 0) return; 
+                    if (dStartStr && t < new Date(dStartStr).getTime()) return;
+                    if (dEndStr && t > new Date(dEndStr + "T23:59:59").getTime()) return;
+                }
+
+                let rowText = `${r.v3||''} ${r.v7||''} ${r.v8||''} ${r.v9||''} ${r.v18||''} ${r.v4||''}`.toLowerCase();
+                if(searchQuery && !rowText.includes(searchQuery)) return;
+
+                visibleCount++;
+                let badges = '';
+                if(r.isOpres) badges += `<br><span class="tag-opres">${d.fm_opr}</span>`;
+                if(r.isNotOurs) badges += `<br><span class="tag-not-ours">${d.ac_not}</span>`;
+                
+                if (r.isInvest) {
+                    badges += `<br><span class="tag-inv">${d.badge_inv}</span>`;
+                } else if (r.isMagistral) {
+                    badges += `<br><span class="tag-mag">${d.badge_mag}</span>`;
+                } else {
+                    badges += `<br><span class="tag-vnutr">${d.badge_vnutr}</span>`;
+                }
+
+                if(type === 'kap') {
+                    if(r.isPlanKap) {
+                        badges += `<br><span class="tag-pl-kap">${d.txt_pl_kap}</span>`;
+                    } else {
+                        badges += `<br><span class="tag-av-kap">${d.txt_av_kap}</span>`;
+                        if(r.transferDate) {
+                            let d1 = new Date(r.v5).toLocaleDateString('ru-RU');
+                            let d2 = new Date(r.transferDate).toLocaleDateString('ru-RU');
+                            let trText = d.txt_transf.replace('{d1}', d1).replace('{d2}', d2);
+                            badges += `<br><span style="font-size:9px; color:#d32f2f;"><i>${trText}</i></span>`;
+                        }
+                    }
+                }
+
+                let homesCell = r.v10 || '';
+                if (homesCell && r.isWaterOn && (type === 'act' || type === 'kap')) {
+                    homesCell = `<s style="color:#d32f2f;">${homesCell}</s><br><span style="font-size:9px; font-weight:bold; color:#0277bd;">${d.fm_w_on}</span>`;
+                    badges += `<br><span style="background:#e3f2fd; color:#0277bd; font-size:9px; padding:2px 4px; border-radius:3px; display:inline-block; margin-top:3px; border:1px solid #0288d1;">${d.badge_water}</span>`;
+                }
+
+                let planHtml = r.v13 ? r.v13.split('-').reverse().join('.') : '';
+                if (r.v13) {
+                    let dlTime = getDeadlineTime(r.v13, r.v14);
+                    if (dlTime > 0) {
+                        let dlStr = new Date(dlTime).toLocaleDateString('ru-RU');
+                        
+                        if (!r.v15) { 
+                            if (dlTime < todayStart.getTime()) {
+                                planHtml = `<span style="color:#d32f2f; font-weight:bold;">${planHtml}<br>К: ${dlStr} <br><span style="font-size:9px;">${d.status_ovd}</span></span>`;
+                            } else if (dlTime === todayStart.getTime() || dlTime === tomorrowStart.getTime()) {
+                                planHtml = `<span style="color:#f57f17; font-weight:bold;">${planHtml}<br>К: ${dlStr} <br><span style="font-size:9px;">${d.status_soon}</span></span>`;
+                            } else {
+                                planHtml = `<span style="color:#1976d2; font-weight:bold;">${planHtml}<br>К: ${dlStr} <br><span style="font-size:9px;">${d.status_norm}</span></span>`;
+                            }
+                        } else { 
+                            let factTime = new Date(r.v15).getTime();
+                            if (factTime <= dlTime + 86400000) { 
+                                planHtml = `<span style="color:#2e7d32; font-weight:bold;">${planHtml}<br>К: ${dlStr} <br><span style="font-size:9px;">${d.status_ok}</span></span>`;
+                            } else {
+                                planHtml = `<span style="color:#e65100; font-weight:bold;">${planHtml}<br>К: ${dlStr} <br><span style="font-size:9px;">${d.status_late}</span></span>`;
+                            }
+                        }
+                    }
+                }
+
+                let actionBtns = `<button class="btn-edit" onclick="editRow('${type}', ${i})">${d.ac_edit}</button>
+                                  <button style="background:red; color:white; border:none; width:100%; border-radius:3px; margin-top:3px; padding:4px; font-weight:bold; font-size:9px; cursor:pointer;" onclick="delRow('${type}', ${i})">${d.ac_del}</button>`;
+                
+                if(type === 'act') {
+                    actionBtns = `<button class="btn-ok" onclick="moveRow(${i}, 'act', 'cls')">${d.ac_ok}</button>
+                                  <button class="btn-kap" onclick="moveRow(${i}, 'act', 'kap')">${d.ac_kap}</button>
+                                  <button class="btn-not-ours" onclick="moveRow(${i}, 'act', 'cls', 'notOurs')">${d.ac_not}</button>` + actionBtns;
+                }
+                else if(type === 'kap') actionBtns = `<button class="btn-ok" onclick="moveRow(${i}, 'kap', 'cls')">${d.ac_end}</button> <button style="background:blue; color:white; border:none; width:100%; border-radius:3px; margin-top:3px; padding:4px; font-weight:bold; font-size:9px; cursor:pointer;" onclick="moveRow(${i}, 'kap', 'act')">${d.ac_rev}</button>` + actionBtns;
+                else actionBtns = `<button style="background:blue; color:white; border:none; width:100%; border-radius:3px; margin-top:3px; padding:4px; font-weight:bold; font-size:9px; cursor:pointer;" onclick="moveRow(${i}, 'cls', 'act')">${d.ac_rev}</button>` + actionBtns;
+
+                let timeCell = "-";
+                if(r.isNotOurs) timeCell = d.t_not;
+                else if (type === 'act') timeCell = `${d.t_wrk}` + calcTimeStr(r.v5, null);
+                else if (type === 'cls' || type === 'kap') timeCell = `${d.t_nowt}` + calcTimeStr(r.v6, r.v15);
+
+                html += `<tr onclick="selectRow(this)">
+                    <td>${r.id}</td><td>${r.v2||''}</td><td>${r.v4||''}</td><td>${r.diam||''}</td><td>${r.v3||''}</td>
+                    <td>${(r.v5||'').replace('T','<br>')}</td><td>${(r.v6||'').replace('T','<br>')}</td>
+                    <td style="text-align:left"><b>${r.v7||''}</b>${badges}</td><td>${r.v8||''}</td><td>${r.v9||''}</td>
+                    <td>${homesCell}</td><td>${r.v11||''}</td><td>${r.v12||''}</td><td>${planHtml}</td><td>${r.v14||''}</td>
+                    <td>${(r.v15||'').replace('T','<br>')}</td><td>${r.v17||''}</td><td>${r.v18||''}</td>
+                    <td><span class="time-badge" style="${type==='act'?'':'background:#e8f5e9; color:#2e7d32;'} ${r.isNotOurs ? 'background:#e0e0e0; color:#424242;' : ''}">${timeCell}</span></td>
+                    <td class="no-print"><button class="btn-photo" onclick="openPhotosLocal('${type}', ${i})">📸 (${r.photos?r.photos.length:0})</button></td>
+                    <td class="no-print">${actionBtns}</td>
+                </tr>`;
+            });
+            document.getElementById(bodyId).innerHTML = html;
+            return visibleCount;
+        };
+
+        let actMapped = applySort(db.act.map((r, i) => ({ item: r, type: 'act', origIdx: i })));
+        let kapMapped = applySort(db.kap.map((r, i) => ({ item: r, type: 'kap', origIdx: i })));
+        let clsMapped = applySort(db.cls.map((r, i) => ({ item: r, type: 'cls', origIdx: i })));
+        
+        let planArr = [];
+        db.act.forEach((r, i) => { if (!r.isNotOurs) planArr.push({ item: r, type: 'act', origIdx: i }); });
+        db.kap.forEach((r, i) => { if (!r.isNotOurs) planArr.push({ item: r, type: 'kap', origIdx: i }); });
+        let planMapped = applySort(planArr);
+
+        document.getElementById('c-act').innerText = draw('tb-act', actMapped, 'act'); 
+        document.getElementById('c-kap').innerText = draw('tb-kap', kapMapped, 'kap'); 
+        document.getElementById('c-plan').innerText = draw('tb-plan', planMapped, 'plan'); 
+        document.getElementById('c-cls').innerText = draw('tb-cls', clsMapped, 'cls');
+
+        updateAnalytics(dStartStr, dEndStr, rawFilter);
+    }
+
+    document.querySelectorAll('[data-lang]').forEach(el => {
+        const key = el.getAttribute('data-lang');
+        if(dict[currentLang][key]) el.innerText = dict[currentLang][key];
+    });
+    document.querySelectorAll('[data-placeholder]').forEach(el => {
+        const key = el.getAttribute('data-placeholder');
+        if(dict[currentLang][key]) el.placeholder = dict[currentLang][key];
+    });
+
+    render();
+</script>
+</body>
+</html>

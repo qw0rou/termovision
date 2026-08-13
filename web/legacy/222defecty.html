@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>СКАДА - ДЕФЕКТЫ v4.6 | Зиненко А.В.</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-color: #f4f7f6;
+            --panel-bg: #ffffff;
+            --primary: #2c3e50;
+            --accent: #3498db;
+            --danger: #e74c3c;
+            --success: #27ae60;
+            --warning: #f39c12;
+            --text: #333;
+        }
+
+        body { font-family: 'Segoe UI', Tahoma, Verdana, sans-serif; background: var(--bg-color); color: var(--text); margin: 0; padding: 15px; }
+        .container { max-width: 1600px; margin: 0 auto; }
+        
+        header { display: flex; justify-content: space-between; align-items: center; background: var(--primary); color: white; padding: 15px 20px; border-radius: 6px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 15px; flex-wrap: wrap; gap: 10px; }
+        .header-title { display: flex; flex-direction: column; }
+        
+        .header-controls { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        
+        /* КНОПКИ */
+        .lang-switch { background: #f39c12; color: white; font-weight: bold; padding: 10px 15px; border-radius: 4px; border: none; cursor: pointer; display: flex; align-items: center; gap: 5px; font-size: 0.9rem; transition: 0.2s; }
+        .lang-switch:hover { background: #d68910; }
+        .valve-btn { background: #8e44ad; color: white; font-weight: bold; padding: 10px 15px; border-radius: 4px; border: none; cursor: pointer; font-size: 0.9rem; transition: 0.2s; }
+        .valve-btn:hover { background: #732d91; }
+
+        .summary-dashboard { display: flex; gap: 20px; margin-bottom: 15px; flex-wrap: wrap; }
+        .stat-card { background: var(--panel-bg); padding: 15px 25px; border-radius: 6px; border-left: 5px solid var(--primary); box-shadow: 0 2px 5px rgba(0,0,0,0.05); flex: 1; font-size: 1.1rem; font-weight: bold; display: flex; justify-content: space-between; align-items: center; min-width: 250px; }
+        .stat-card.active-card { border-left-color: var(--danger); }
+        .stat-card.archive-card { border-left-color: var(--success); }
+        .stat-val { font-size: 1.8rem; color: var(--primary); }
+
+        .tabs { display: flex; gap: 8px; margin-bottom: 15px; flex-wrap: wrap; }
+        .tab-btn { padding: 12px 25px; border: none; background: #ddd; cursor: pointer; border-radius: 4px; font-weight: bold; transition: 0.2s; color: #444; font-size: 0.95rem; }
+        .tab-btn.active { background: var(--accent); color: white; }
+
+        .panel { background: var(--panel-bg); padding: 15px; border-radius: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 15px; border: 1px solid #ccc; }
+        
+        .grid-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; align-items: end; }
+        .field { display: flex; flex-direction: column; }
+        label { font-size: 0.75rem; margin-bottom: 4px; color: #555; font-weight: bold; text-transform: uppercase; }
+        input, select, textarea { padding: 8px; border: 1px solid #aaa; border-radius: 4px; font-size: 0.9rem; }
+        input:focus, select:focus { border-color: var(--accent); outline: none; }
+
+        .table-controls { display: flex; justify-content: space-between; flex-wrap: wrap; margin-bottom: 15px; align-items: center; background: #ecf0f1; padding: 12px; border-radius: 6px; border: 1px solid #bdc3c7; gap: 10px; }
+        .filter-group { display: flex; gap: 15px; align-items: center; flex-wrap: wrap; }
+
+        .table-wrapper { max-height: 65vh; overflow-y: auto; border: 1px solid #ddd; border-radius: 4px; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        th { background: #ecf0f1; padding: 10px; text-align: left; font-weight: bold; position: sticky; top: 0; z-index: 10; box-shadow: 0 2px 2px -1px rgba(0,0,0,0.2); border-bottom: 2px solid #ccc; border-right: 1px solid #ddd; }
+        td { padding: 8px 10px; border: 1px solid #ddd; vertical-align: middle; }
+        tr:hover { background: #fdfdfd; }
+
+        .badge { padding: 4px 8px; border-radius: 4px; color: white; font-size: 0.8rem; font-weight: bold; text-align: center; display: inline-block; min-width: 20px;}
+        .prio-high { background: var(--danger); }
+        .prio-mid { background: var(--warning); }
+        .prio-low { background: var(--success); }
+
+        .btn { padding: 8px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.8rem; transition: 0.2s; color: white; display: inline-flex; align-items: center; justify-content: center; gap: 5px; }
+        .btn-add { background: var(--accent); width: 100%; height: 35px; }
+        .btn-add:hover { background: #2980b9; }
+        
+        .btn-act { padding: 5px; border-radius: 4px; color: white; border: none; cursor: pointer; display: inline-flex; justify-content: center; align-items: center; min-width: 28px; margin-right: 3px; font-size: 1rem; }
+        .btn-edit { background: #7f8c8d; }
+        .btn-res { background: var(--success); }
+        .btn-del { background: var(--danger); }
+        .btn-del:hover { background: #c0392b; }
+
+        .btn-export { background: rgba(255,255,255,0.2); border: 1px solid white; }
+        .btn-export:hover { background: rgba(255,255,255,0.3); }
+        .btn-print { background: #34495e; font-size: 0.9rem; padding: 10px 20px; }
+        .btn-print:hover { background: #2c3e50; }
+
+        .hidden { display: none; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .time-stats { display: flex; justify-content: space-between; background: #e8f4f8; padding: 15px; border-radius: 6px; border: 1px solid #bce0ee; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+        .time-box { text-align: center; flex: 1; border-right: 1px solid #ccc; min-width: 150px; }
+        .time-box:last-child { border-right: none; }
+        .time-box span { display: block; font-size: 0.85rem; color: #555; text-transform: uppercase; font-weight: bold; margin-bottom: 5px; }
+        .time-box strong { font-size: 1.4rem; color: #2c3e50; }
+        
+        /* МОДАЛЬНОЕ ОКНО ДЛЯ АРМАТУРЫ */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; justify-content: center; align-items: center; }
+        .modal-content { background: white; width: 90%; max-width: 1200px; height: 90%; border-radius: 8px; padding: 20px; display: flex; flex-direction: column; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 10px; }
+        .valve-summary { margin-top: 15px; padding: 15px; background: #fdfefe; border: 2px dashed #bdc3c7; border-radius: 6px; }
+
+        canvas { max-height: 350px; }
+
+        @media print {
+            body { background: white; padding: 0; margin: 0; color: black; }
+            header, .tabs, .summary-dashboard, #form-panel, .table-controls, .no-print, .action-col { display: none !important; }
+            .container { max-width: 100%; }
+            .panel { border: none; box-shadow: none; margin: 0; padding: 0; }
+            .table-wrapper { max-height: none; overflow: visible; border: none; }
+            table { width: 100%; border: 1px solid #000; }
+            th { position: static; box-shadow: none; border: 1px solid #000 !important; }
+            th, td { border: 1px solid #000 !important; color: #000; padding: 4px; font-size: 11px; }
+            .badge { border: 1px solid #000; color: #000 !important; background: transparent !important; }
+            .time-stats { border: 1px solid #000; background: transparent; }
+            canvas { max-width: 100%; page-break-inside: avoid; }
+            h3.print-title { display: block !important; text-align: center; margin-bottom: 5px; font-size: 16px; }
+            .print-subtitle { display: block !important; text-align: center; margin-bottom: 15px; font-size: 12px; font-style: italic; }
+            /* Печать модалки */
+            .modal-overlay { position: static; display: block !important; background: white; height: auto; }
+            .modal-content { width: 100%; height: auto; box-shadow: none; padding: 0; border: none; }
+            .modal-header button, .modal-content .btn-print { display: none !important; }
+            .valve-summary { border: 1px solid #000; }
+        }
+        h3.print-title, .print-subtitle { display: none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <div class="header-title">
+            <h2 style="margin:0;" data-lang="title">СКАДА - ДЕФЕКТЫ v4.6 🦾</h2>
+            <small data-lang="subtitle">Разработчик: Зиненко А.В. | ГКП "КТЭК"</small>
+        </div>
+        <div class="header-controls">
+            <button class="lang-switch" onclick="toggleLang()" id="langBtn">🇰🇿 ҚАЗ</button>
+            <button class="valve-btn no-print" onclick="openValveReport()" data-lang="btn_valve">🧰 ЗАМЕНА АРМАТУРЫ</button>
+            <button class="btn btn-export no-print" onclick="exportData()" data-lang="btn_export">💾 ЭКСПОРТ</button>
+            <input type="file" id="importFile" class="hidden" onchange="importData(event)">
+            <button class="btn btn-export no-print" onclick="document.getElementById('importFile').click()" data-lang="btn_import">📥 ИМПОРТ</button>
+        </div>
+    </header>
+
+    <div class="summary-dashboard no-print">
+        <div class="stat-card active-card">
+            <span data-lang="stat_active">⚠️ Активные дефекты (По фильтру):</span>
+            <span class="stat-val" id="countActiveGlobal" style="color: var(--danger);">0</span>
+        </div>
+        <div class="stat-card archive-card">
+            <span data-lang="stat_arch">✅ Устраненные (По фильтру):</span>
+            <span class="stat-val" id="countArchGlobal" style="color: var(--success);">0</span>
+        </div>
+    </div>
+
+    <div class="tabs no-print">
+        <button class="tab-btn active" onclick="showTab('current', this)" data-lang="tab_curr">⚠️ ТЕКУЩИЕ ДЕФЕКТЫ</button>
+        <button class="tab-btn" onclick="showTab('archive', this)" data-lang="tab_arch">✅ АРХИВ</button>
+        <button class="tab-btn" onclick="showTab('analytics', this)" data-lang="tab_stat">📊 АНАЛИТИКА / ОТЧЕТ</button>
+    </div>
+
+    <!-- ПАНЕЛЬ ФИЛЬТРА И ПЕЧАТИ -->
+    <div class="table-controls no-print" id="printControls">
+        <div class="filter-group">
+            <div class="field" style="flex-direction: row; align-items: center; gap: 5px;">
+                <label style="margin:0;" data-lang="flt_src">Котельная:</label>
+                <select id="filterSource" onchange="applyFilters()" style="width: 200px; font-weight: bold;">
+                    <option value="ALL" data-lang="flt_all">-- ВСЕ ИСТОЧНИКИ --</option>
+                    <option>БМК Кунай</option><option>БМК-92(юбилейный)</option><option>БМК-93(юбилейный)</option>
+                    <option>Жулдыз</option><option>Котельная № 12</option><option>ТЭЦ № 2</option>
+                    <option>Котельная № 3</option><option>Теплоснаб МК-3700</option><option>ТИ № 10- Кост-2</option>
+                    <option>ТИ № 11 - п.Дружба</option><option>ТИ № 4 - КСМК</option><option>ТИ № 6 - Мехколонна</option>
+                    <option>ТИ № 8 - п.Геофизиков</option><option>ТИ № 9 - п.Амангельды</option><option>ТЭЦ</option>
+                    <option>Другое</option>
+                </select>
+            </div>
+            <div class="field" style="flex-direction: row; align-items: center; gap: 5px;">
+                <label style="margin:0;" data-lang="flt_from">Период с:</label>
+                <input type="date" id="filterDateFrom" onchange="applyFilters()">
+            </div>
+            <div class="field" style="flex-direction: row; align-items: center; gap: 5px;">
+                <label style="margin:0;" data-lang="flt_to">по:</label>
+                <input type="date" id="filterDateTo" onchange="applyFilters()">
+            </div>
+            <button class="btn" style="background:#95a5a6;" onclick="clearFilters()" data-lang="btn_reset">Сбросить</button>
+        </div>
+        <button class="btn btn-print" onclick="window.print()" data-lang="btn_print">🖨️ ПЕЧАТЬ ОТЧЕТА</button>
+    </div>
+
+    <!-- ФОРМА ВВОДА -->
+    <div id="form-panel" class="panel no-print">
+        <form id="defectForm" class="grid-form">
+            <input type="hidden" id="editId">
+            <div class="field">
+                <label data-lang="frm_src">Источник</label>
+                <select id="source">
+                    <option>БМК Кунай</option><option>БМК-92(юбилейный)</option><option>БМК-93(юбилейный)</option>
+                    <option>Жулдыз</option><option>Котельная № 12</option><option>ТЭЦ № 2</option>
+                    <option>Котельная № 3</option><option>Теплоснаб МК-3700</option><option>ТИ № 10- Кост-2</option>
+                    <option>ТИ № 11 - п.Дружба</option><option>ТИ № 4 - КСМК</option><option>ТИ № 6 - Мехколонна</option>
+                    <option>ТИ № 8 - п.Геофизиков</option><option>ТИ № 9 - п.Амангельды</option><option>ТЭЦ</option>
+                    <option>Другое</option>
+                </select>
+            </div>
+            <div class="field"><label data-lang="frm_dt">Дата обнаружения</label><input type="datetime-local" id="dateObserved" required></div>
+            <div class="field"><label data-lang="frm_tk">Отпайка / ТК</label><input type="text" id="tk" placeholder="ТК-20.13"></div>
+            <div class="field"><label data-lang="frm_adr">Адрес</label><input type="text" id="address" placeholder="ул. Абая, 120"></div>
+            <div class="field">
+                <label data-lang="frm_def">Характер дефекта</label>
+                <select id="defectType" onchange="toggleOtherDefect(this)">
+                    <option data-lang="def_1">Течь сальника (набивать)</option>
+                    <option data-lang="def_2">Не держит задвижка (менять)</option>
+                    <option data-lang="def_3">Сильная коррозия (свищ)</option>
+                    <option data-lang="def_4">Сломан бугель / кранбукса</option>
+                    <option data-lang="def_5">Сломан штурвал / нет щечек</option>
+                    <option data-lang="def_6">Течь прокладки / выдавило</option>
+                    <option data-lang="def_7">Дренаж пропускает</option>
+                    <option data-lang="def_8">Сломана втулка подшипника</option>
+                    <option data-lang="def_9">Заилено (требуется чистка)</option>
+                    <option data-lang="def_10">Воздушник не работает</option>
+                    <option value="other" data-lang="def_oth">--- ДРУГОЕ (написать) ---</option>
+                </select>
+                <input type="text" id="defectOther" class="hidden" style="margin-top:4px;" placeholder="...">
+            </div>
+            <div class="field"><label data-lang="frm_net">Сеть</label>
+                <select id="networkType"><option data-lang="net_1">Магистраль</option><option data-lang="net_2">Внутриквартальная</option></select>
+            </div>
+            <div class="field"><label data-lang="frm_not">Примечание</label><input type="text" id="note"></div>
+            <div class="field"><label data-lang="frm_det">Кто обнаружил</label><input type="text" id="detectedBy"></div>
+            <div class="field"><label data-lang="frm_pri">Приоритет (1-10)</label><input type="number" id="priority" min="1" max="10" value="5"></div>
+            <div class="field"><label data-lang="frm_pln">План устранения</label><input type="date" id="planDate"></div>
+            <div class="field"><label>&nbsp;</label>
+                <button type="button" id="btnSubmit" class="btn btn-add" onclick="saveDefect()" data-lang="btn_save">СОХРАНИТЬ В БАЗУ</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- ТАБЛИЦА ТЕКУЩИХ -->
+    <div id="tab-current" class="panel">
+        <h3 class="print-title" data-lang="prt_t_cur">ОТЧЕТ: ТЕКУЩИЕ ДЕФЕКТЫ В РАБОТЕ</h3>
+        <div class="print-subtitle" id="printSubCurr"></div>
+        <div class="table-wrapper">
+            <table id="currentTable">
+                <thead>
+                    <tr>
+                        <th data-lang="th_src">Источник</th><th data-lang="th_dt">Дата обнар.</th><th data-lang="th_tk">Отпайка</th>
+                        <th data-lang="th_adr">Адрес</th><th data-lang="th_def">Дефект</th><th data-lang="th_net">Сеть</th>
+                        <th data-lang="th_not">Примечание</th><th data-lang="th_det">Обнаружил</th><th data-lang="th_pri">Приор.</th>
+                        <th data-lang="th_pln">План устр.</th><th class="action-col" style="min-width: 100px;" data-lang="th_act">Действия</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- АРХИВ -->
+    <div id="tab-archive" class="panel hidden">
+        <h3 class="print-title" data-lang="prt_t_arc">ОТЧЕТ: АРХИВ УСТРАНЕННЫХ ДЕФЕКТОВ</h3>
+        <div class="print-subtitle" id="printSubArch"></div>
+        <div class="table-wrapper">
+            <table id="archiveTable">
+                <thead>
+                    <tr>
+                        <th data-lang="th_src">Источник</th><th data-lang="th_adr2">Адрес / ТК</th><th data-lang="th_def">Дефект</th>
+                        <th data-lang="th_fact">Факт устранения</th><th data-lang="th_mst">Кто устранил</th><th data-lang="th_time">Время в работе</th>
+                        <th class="action-col" data-lang="th_act2">Откат / Удалить</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- АНАЛИТИКА -->
+    <div id="tab-analytics" class="panel hidden">
+        <h3 class="print-title" data-lang="prt_t_sta">АНАЛИТИЧЕСКАЯ СВОДКА</h3>
+        <div class="print-subtitle" id="printSubStat"></div>
+        
+        <div class="time-stats">
+            <div class="time-box"><span data-lang="st_min">Самый быстрый ремонт</span><strong id="statMinTime">-</strong></div>
+            <div class="time-box"><span data-lang="st_avg">Среднее время устранения</span><strong id="statAvgTime" style="color: var(--accent);">-</strong></div>
+            <div class="time-box"><span data-lang="st_max">Самый долгий дефект</span><strong id="statMaxTime" style="color: var(--danger);">-</strong></div>
+        </div>
+
+        <div class="stats-grid">
+            <div style="border: 1px solid #ccc; padding: 15px; border-radius: 4px; background: white;"><canvas id="chartSources"></canvas></div>
+            <div style="border: 1px solid #ccc; padding: 15px; border-radius: 4px; background: white;"><canvas id="chartMasters"></canvas></div>
+        </div>
+    </div>
+</div>
+
+<!-- ОКНО ВЕДОМОСТИ АРМАТУРЫ -->
+<div id="valveModal" class="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 style="margin:0; color:#8e44ad;" data-lang="valve_title">🧰 Дефектовка: Арматура под замену (Активные)</h2>
+            <button onclick="document.getElementById('valveModal').style.display='none'" style="background:#e74c3c; color:white; border:none; padding:8px 15px; border-radius:4px; font-weight:bold; cursor:pointer;" data-lang="valve_close">ЗАКРЫТЬ</button>
+        </div>
+        <div class="table-wrapper" style="max-height: 50vh; overflow-y: auto;">
+            <table id="valveTable">
+                <thead>
+                    <tr>
+                        <th data-lang="th_src">Источник</th>
+                        <th data-lang="th_adr2">Адрес / ТК</th>
+                        <th data-lang="th_net">Сеть</th>
+                        <th data-lang="th_def">Дефект (Арматура)</th>
+                        <th data-lang="th_pri">Приоритет</th>
+                    </tr>
+                </thead>
+                <tbody id="valveTbody"></tbody>
+            </table>
+        </div>
+        
+        <!-- СВОДКА ПО ДИАМЕТРАМ -->
+        <div id="valveSummary" class="valve-summary"></div>
+        
+        <button class="btn-print" onclick="window.print()" style="margin-top:15px; font-size:1rem; padding:12px; border-radius:4px;" data-lang="btn_print">🖨️ ПЕЧАТЬ ВЕДОМОСТИ</button>
+    </div>
+</div>
+
+<script>
+    // --- СЛОВАРЬ ПЕРЕВОДОВ ---
+    const dict = {
+        'ru': {
+            title: 'СКАДА - ДЕФЕКТЫ v4.6 🦾', subtitle: 'Разработчик: Зиненко А.В. | ГКП "КТЭК"',
+            btn_export: '💾 ЭКСПОРТ', btn_import: '📥 ИМПОРТ', btn_valve: '🧰 ЗАМЕНА АРМАТУРЫ',
+            stat_active: '⚠️ Активные дефекты (По фильтру):', stat_arch: '✅ Устраненные (По фильтру):',
+            tab_curr: '⚠️ ТЕКУЩИЕ ДЕФЕКТЫ', tab_arch: '✅ АРХИВ', tab_stat: '📊 АНАЛИТИКА / ОТЧЕТ',
+            flt_src: 'Котельная:', flt_all: '-- ВСЕ ИСТОЧНИКИ --', flt_from: 'Период с:', flt_to: 'по:', btn_reset: 'Сбросить', btn_print: '🖨️ ПЕЧАТЬ ОТЧЕТА',
+            frm_src: 'Источник', frm_dt: 'Дата обнаружения', frm_tk: 'Отпайка / ТК', frm_adr: 'Адрес', frm_def: 'Характер дефекта',
+            def_1: 'Течь сальника (набивать)', def_2: 'Не держит задвижка (менять)', def_3: 'Сильная коррозия (свищ)', def_4: 'Сломан бугель / кранбукса', def_5: 'Сломан штурвал / нет щечек', def_6: 'Течь прокладки / выдавило', def_7: 'Дренаж пропускает', def_8: 'Сломана втулка подшипника', def_9: 'Заилено (требуется чистка)', def_10: 'Воздушник не работает', def_oth: '--- ДРУГОЕ (написать) ---',
+            frm_net: 'Сеть', net_1: 'Магистраль', net_2: 'Внутриквартальная', frm_not: 'Примечание', frm_det: 'Кто обнаружил', frm_pri: 'Приоритет (1-10)', frm_pln: 'План устранения', btn_save: 'СОХРАНИТЬ В БАЗУ', btn_upd: 'ОБНОВИТЬ ДАННЫЕ',
+            prt_t_cur: 'ОТЧЕТ: ТЕКУЩИЕ ДЕФЕКТЫ В РАБОТЕ', prt_t_arc: 'ОТЧЕТ: АРХИВ УСТРАНЕННЫХ ДЕФЕКТОВ', prt_t_sta: 'АНАЛИТИЧЕСКАЯ СВОДКА',
+            th_src: 'Источник', th_dt: 'Дата обнар.', th_tk: 'Отпайка', th_adr: 'Адрес', th_def: 'Дефект', th_net: 'Сеть', th_not: 'Примечание', th_det: 'Обнаружил', th_pri: 'Приор.', th_pln: 'План устр.', th_act: 'Действия',
+            th_adr2: 'Адрес / ТК', th_fact: 'Факт устранения', th_mst: 'Кто устранил', th_time: 'Время в работе', th_act2: 'Откат / Удалить',
+            st_min: 'Самый быстрый ремонт', st_avg: 'Среднее время устранения', st_max: 'Самый долгий дефект',
+            p_mst: 'Кто устранил дефект (ФИО / Бригада)?', p_dt: 'Факт устранения (ГГГГ-ММ-ДД ЧЧ:ММ).', c_rev: 'Вернуть дефект в работу?', c_del: 'ВНИМАНИЕ! Вы точно хотите удалить этот дефект навсегда?',
+            valve_title: '🧰 Дефектовка: Арматура под замену (Активные)', valve_close: 'ЗАКРЫТЬ', valve_empty: 'Нет активных дефектов на замену арматуры',
+            sum_title: 'Сводная потребность арматуры:', sum_unk: 'Без указания диаметра'
+        },
+        'kz': {
+            title: 'СКАДА - АҚАУЛАР v4.6 🦾', subtitle: 'Әзірлеуші: Зиненко А.В. | "ҚЖЭК" МКК',
+            btn_export: '💾 САҚТАУ', btn_import: '📥 ЖҮКТЕУ', btn_valve: '🧰 АРМАТУРА АУЫСТЫРУ',
+            stat_active: '⚠️ Белсенді ақаулар (Сүзгі бойынша):', stat_arch: '✅ Жойылғандар (Сүзгі бойынша):',
+            tab_curr: '⚠️ АҒЫМДАҒЫ АҚАУЛАР', tab_arch: '✅ МҰРАҒАТ', tab_stat: '📊 ТАЛДАУ / ЕСЕП',
+            flt_src: 'Қазандық:', flt_all: '-- БАРЛЫҚ ДЕРЕККӨЗДЕР --', flt_from: 'Кезеңнен:', flt_to: 'дейін:', btn_reset: 'Тастау', btn_print: '🖨️ ЕСЕПТІ ШЫҒАРУ',
+            frm_src: 'Дереккөз (Қазандық)', frm_dt: 'Анықталған күні', frm_tk: 'Құдық / ТК', frm_adr: 'Мекенжай', frm_def: 'Ақаудың сипаты',
+            def_1: 'Тығыздама ағуы (толтыру)', def_2: 'Ысырма ұстамайды (ауыстыру)', def_3: 'Қатты коррозия (тесік)', def_4: 'Бұғана / кранбукса сынған', def_5: 'Штурвал сынған / жақша жоқ', def_6: 'Төсеме ағуы / сығып шығарды', def_7: 'Дренаж өткізеді', def_8: 'Мойынтірек төлкесі сынған', def_9: 'Лайланған (тазалау қажет)', def_10: 'Ауа шығарғыш істемейді', def_oth: '--- БАСҚА (жазу) ---',
+            frm_net: 'Желі', net_1: 'Магистраль', net_2: 'Орамішілік', frm_not: 'Ескертпе', frm_det: 'Кім анықтады', frm_pri: 'Басымдық (1-10)', frm_pln: 'Жою жоспары', btn_save: 'БАЗАҒА САҚТАУ', btn_upd: 'ДЕРЕКТЕРДІ ЖАҢАРТУ',
+            prt_t_cur: 'ЕСЕП: ЖҰМЫСТАҒЫ АҒЫМДАҒЫ АҚАУЛАР', prt_t_arc: 'ЕСЕП: ЖОЙЫЛҒАН АҚАУЛАР МҰРАҒАТЫ', prt_t_sta: 'АНАЛИТИКАЛЫҚ ЕСЕП',
+            th_src: 'Дереккөз', th_dt: 'Анық. күні', th_tk: 'Құдық', th_adr: 'Мекенжай', th_def: 'Ақау', th_net: 'Желі', th_not: 'Ескертпе', th_det: 'Анықтаған', th_pri: 'Басым.', th_pln: 'Жоспар', th_act: 'Әрекеттер',
+            th_adr2: 'Мекенжай/Құдық', th_fact: 'Жойылған күні', th_mst: 'Кім жойды', th_time: 'Жұмыс уақыты', th_act2: 'Қайтару/Өшіру',
+            st_min: 'Ең жылдам жөндеу', st_avg: 'Орташа жою уақыты', st_max: 'Ең ұзақ ақау',
+            p_mst: 'Ақауды кім жойды (Аты-жөні / Бригада)?', p_dt: 'Жою фактісі (ЖЖЖЖ-АА-КК СС:ММ).', c_rev: 'Ақауды жұмысқа қайтару керек пе?', c_del: 'ЕСКЕРТУ! Бұл ақауды біржола өшіруге сенімдісіз бе?',
+            valve_title: '🧰 Ақаулар: Ауыстырылатын арматуралар', valve_close: 'ЖАБУ', valve_empty: 'Ауыстырылатын арматура ақаулары табылған жоқ',
+            sum_title: 'Жинақтық қажеттілік:', sum_unk: 'Диаметрі көрсетілмеген'
+        }
+    };
+
+    let currentLang = 'ru';
+
+    function toggleLang() {
+        currentLang = currentLang === 'ru' ? 'kz' : 'ru';
+        const btn = document.getElementById('langBtn');
+        btn.innerHTML = currentLang === 'ru' ? '🇰🇿 ҚАЗ' : '🇷🇺 РУС';
+        btn.style.background = currentLang === 'ru' ? '#f39c12' : '#3498db';
+        
+        document.querySelectorAll('[data-lang]').forEach(el => {
+            const key = el.getAttribute('data-lang');
+            if(dict[currentLang][key]) {
+                if(el.tagName === 'INPUT' && el.type === 'button') el.value = dict[currentLang][key];
+                else el.innerText = dict[currentLang][key];
+            }
+        });
+        const sBtn = document.getElementById('btnSubmit');
+        if(sBtn.style.background !== 'rgb(230, 126, 34)') sBtn.innerText = dict[currentLang]['btn_save'];
+        else sBtn.innerText = dict[currentLang]['btn_upd'];
+        renderTables();
+    }
+
+    let defects = JSON.parse(localStorage.getItem('scada_defects_ktek_v4')) || [];
+    document.getElementById('dateObserved').value = new Date().toISOString().slice(0, 16);
+
+    function toggleOtherDefect(sel) { document.getElementById('defectOther').classList.toggle('hidden', sel.value !== 'other'); }
+    function safeDateMs(dateStr) { if (!dateStr) return 0; const d = new Date(dateStr); return isNaN(d.getTime()) ? 0 : d.getTime(); }
+    function formatTimeDiff(ms) { if(ms<=0) return 'Менее 1 ч.'; const d = Math.floor(ms/86400000); const h = Math.floor((ms%86400000)/3600000); return d>0 ? `${d} дн. ${h} ч.` : `${h} ч.`; }
+
+    // --- МОДУЛЬ ДЕФЕКТОВКИ АРМАТУРЫ СО СВОДКОЙ ---
+    function openValveReport() {
+        const tbody = document.getElementById('valveTbody');
+        const sumDiv = document.getElementById('valveSummary');
+        tbody.innerHTML = '';
+        let count = 0;
+        let diamCounts = {}; // Объект для подсчета диаметров
+        
+        defects.sort((a,b) => safeDateMs(b.dateObserved) - safeDateMs(a.dateObserved)).forEach(d => {
+            if(!d.resolved) {
+                const t = d.defectType.toLowerCase();
+                
+                // Умный фильтр (Ищем задвижки/вентили/затворы, которые надо менять/лопнули)
+                const isValve = /(за |за\.|задв|затвор|вентиль|кран|за$)/.test(t);
+                const isReplace = /(меня|замен|лопнул|сломан|коррозия|корпус)/.test(t);
+                const isMinor = /(набивать|сальник|прокладк|болт)/.test(t) && !t.includes('меня');
+                const isDictReplace = t.includes('менять') && t.includes('задвижк');
+                
+                if ((isValve && isReplace && !isMinor) || isDictReplace || (isValve && t.includes('менять'))) {
+                    // Отсекаем просто трубы
+                    if(t.includes('тр ф') && !isValve) return; 
+
+                    const trDefType = translateDefectType(d.defectType);
+                    const trNetType = translateNetwork(d.networkType);
+
+                    tbody.innerHTML += `<tr>
+                        <td><b>${d.source}</b></td>
+                        <td>${d.address} <br><small>${d.tk || ''}</small></td>
+                        <td>${trNetType}</td>
+                        <td style="color:#c0392b; font-weight:bold; font-size: 1rem;">${trDefType}</td>
+                        <td style="text-align:center;"><span class="badge prio-high">${d.priority}</span></td>
+                    </tr>`;
+                    count++;
+
+                    // Ищем диаметр регулярным выражением (ищет "ф100", "Ф 50", и т.д.)
+                    let match = d.defectType.match(/[фФ]\s*(\d+)/);
+                    if (match) {
+                        let diam = "Ф" + match[1];
+                        diamCounts[diam] = (diamCounts[diam] || 0) + 1;
+                    } else {
+                        let unkKey = dict[currentLang]['sum_unk'];
+                        diamCounts[unkKey] = (diamCounts[unkKey] || 0) + 1;
+                    }
+                }
+            }
+        });
+        
+        if(count === 0) {
+            tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:15px; font-weight:bold;">${dict[currentLang]['valve_empty']}</td></tr>`;
+            sumDiv.style.display = 'none';
+        } else {
+            sumDiv.style.display = 'block';
+            let sumHtml = `<h4 style="margin-top:0; color:#2c3e50; font-size: 1.1rem;">${dict[currentLang]['sum_title']}</h4>`;
+            sumHtml += `<div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; font-size: 1rem;">`;
+            
+            // Сортировка ключей, чтобы цифры шли по порядку, а "Без указания" в конце
+            let keys = Object.keys(diamCounts).sort((a, b) => {
+                if(a.includes('Ф') && b.includes('Ф')) {
+                    return parseInt(a.replace('Ф','')) - parseInt(b.replace('Ф',''));
+                }
+                return a > b ? 1 : -1;
+            });
+
+            keys.forEach(k => {
+                sumHtml += `<div style="background:#ecf0f1; padding:10px; border-radius:4px; text-align:center; border: 1px solid #bdc3c7;">
+                    <b style="color:#2980b9;">${k}</b> — <span style="font-size:1.2rem; font-weight:bold; color:#e74c3c;">${diamCounts[k]}</span> шт.
+                </div>`;
+            });
+            sumHtml += `</div>`;
+            sumDiv.innerHTML = sumHtml;
+        }
+
+        document.getElementById('valveModal').style.display = 'flex';
+    }
+
+    function saveDefect() {
+        const id = document.getElementById('editId').value;
+        const defTypeVal = document.getElementById('defectType').value;
+        let defectChar = defTypeVal;
+        
+        if (defTypeVal === 'other') defectChar = document.getElementById('defectOther').value;
+        else {
+            const sel = document.getElementById('defectType');
+            defectChar = dict['ru'][`def_${sel.selectedIndex+1}`] || defTypeVal;
+        }
+
+        let networkChar = document.getElementById('networkType').value;
+        if(networkChar === dict['kz']['net_1']) networkChar = 'Магистраль';
+        if(networkChar === dict['kz']['net_2']) networkChar = 'Внутриквартальная';
+
+        const data = {
+            id: id ? parseInt(id) : Date.now(),
+            source: document.getElementById('source').value,
+            dateObserved: document.getElementById('dateObserved').value,
+            tk: document.getElementById('tk').value,
+            address: document.getElementById('address').value,
+            defectType: defectChar,
+            networkType: networkChar,
+            note: document.getElementById('note').value,
+            detectedBy: document.getElementById('detectedBy').value,
+            priority: parseInt(document.getElementById('priority').value) || 5,
+            planDate: document.getElementById('planDate').value,
+            resolved: false, resolveDate: null, master: ''
+        };
+
+        if (id) {
+            const index = defects.findIndex(d => d.id === parseInt(id));
+            defects[index] = { ...defects[index], ...data };
+        } else { defects.push(data); }
+
+        document.getElementById('defectForm').reset();
+        document.getElementById('editId').value = '';
+        const btn = document.getElementById('btnSubmit');
+        btn.innerText = dict[currentLang]['btn_save'];
+        btn.style.background = 'var(--accent)';
+        document.getElementById('defectOther').classList.add('hidden');
+        document.getElementById('dateObserved').value = new Date().toISOString().slice(0, 16);
+        applyFilters();
+    }
+
+    function editDefect(id) {
+        const d = defects.find(x => x.id === id);
+        document.getElementById('editId').value = d.id;
+        document.getElementById('source').value = d.source;
+        document.getElementById('dateObserved').value = d.dateObserved;
+        document.getElementById('tk').value = d.tk;
+        document.getElementById('address').value = d.address;
+        
+        const sel = document.getElementById('defectType');
+        let found = false;
+        for (let i = 0; i < sel.options.length; i++) {
+            if (dict['ru'][`def_${i+1}`] === d.defectType || sel.options[i].value === d.defectType) {
+                sel.selectedIndex = i; found = true; break;
+            }
+        }
+        if (!found) { sel.value = 'other'; document.getElementById('defectOther').classList.remove('hidden'); document.getElementById('defectOther').value = d.defectType; } 
+        else document.getElementById('defectOther').classList.add('hidden');
+
+        const netSel = document.getElementById('networkType');
+        if(d.networkType === 'Магистраль') netSel.selectedIndex = 0; else if (d.networkType === 'Внутриквартальная') netSel.selectedIndex = 1;
+
+        document.getElementById('note').value = d.note || ''; document.getElementById('detectedBy').value = d.detectedBy || '';
+        document.getElementById('priority').value = d.priority; document.getElementById('planDate').value = d.planDate || '';
+
+        const btn = document.getElementById('btnSubmit'); btn.innerText = dict[currentLang]['btn_upd']; btn.style.background = '#e67e22';
+        window.scrollTo(0, 0);
+    }
+
+    function resolveDefect(id) {
+        const master = prompt(dict[currentLang]['p_mst']); if (master === null) return;
+        const factDateInput = prompt(dict[currentLang]['p_dt'], new Date().toISOString().slice(0, 16).replace('T', ' ')); if (factDateInput === null) return;
+        let finalDate = new Date(factDateInput.replace(' ', 'T')); if (isNaN(finalDate.getTime())) finalDate = new Date();
+        const idx = defects.findIndex(d => d.id === id);
+        defects[idx].resolved = true; defects[idx].resolveDate = finalDate.toISOString(); defects[idx].master = master || '-';
+        applyFilters();
+    }
+
+    function revertDefect(id) { if (confirm(dict[currentLang]['c_rev'])) { defects.find(d => d.id === id).resolved = false; applyFilters(); } }
+    function deleteDefect(id) { if (confirm(dict[currentLang]['c_del'])) { defects = defects.filter(d => d.id !== id); applyFilters(); } }
+
+    function clearFilters() { document.getElementById('filterSource').value = 'ALL'; document.getElementById('filterDateFrom').value = ''; document.getElementById('filterDateTo').value = ''; applyFilters(); }
+
+    function applyFilters() { localStorage.setItem('scada_defects_ktek_v4', JSON.stringify(defects)); renderTables(); }
+
+    function updatePrintSubtitles(source, dateFrom, dateTo) {
+        let text = `${dict[currentLang]['flt_src']} ${source === 'ALL' ? dict[currentLang]['flt_all'] : source}`;
+        if (dateFrom || dateTo) text += ` | ${dateFrom ? new Date(dateFrom).toLocaleDateString() : '...'} - ${dateTo ? new Date(dateTo).toLocaleDateString() : '...'}`;
+        document.getElementById('printSubCurr').innerText = text; document.getElementById('printSubArch').innerText = text; document.getElementById('printSubStat').innerText = text;
+    }
+
+    function translateDefectType(ruText) {
+        if(currentLang === 'ru') return ruText;
+        for(let i=1; i<=10; i++) if(dict['ru'][`def_${i}`] === ruText) return dict['kz'][`def_${i}`];
+        return ruText;
+    }
+    function translateNetwork(ruText) {
+        if(currentLang === 'ru') return ruText;
+        if(ruText === 'Магистраль') return dict['kz']['net_1']; if(ruText === 'Внутриквартальная') return dict['kz']['net_2'];
+        return ruText;
+    }
+
+    function renderTables() {
+        const tCurr = document.querySelector('#currentTable tbody'); const tArch = document.querySelector('#archiveTable tbody');
+        tCurr.innerHTML = ''; tArch.innerHTML = '';
+        const filterSource = document.getElementById('filterSource').value; const dateFrom = document.getElementById('filterDateFrom').value; const dateTo = document.getElementById('filterDateTo').value;
+        updatePrintSubtitles(filterSource, dateFrom, dateTo);
+
+        const msFrom = dateFrom ? new Date(dateFrom + 'T00:00:00').getTime() : 0; const msTo = dateTo ? new Date(dateTo + 'T23:59:59').getTime() : Infinity;
+        let activeFiltered = 0, archFiltered = 0; let maxMs = 0, minMs = Infinity, sumMs = 0, countMs = 0;
+
+        defects.sort((a, b) => safeDateMs(b.dateObserved) - safeDateMs(a.dateObserved)).forEach(d => {
+            const dTime = safeDateMs(d.dateObserved);
+            if ((filterSource === "ALL" || d.source === filterSource) && dTime >= msFrom && dTime <= msTo) {
+                const trDefType = translateDefectType(d.defectType); const trNetType = translateNetwork(d.networkType);
+
+                if (!d.resolved) {
+                    activeFiltered++;
+                    const pClass = d.priority >= 8 ? 'prio-high' : (d.priority >= 5 ? 'prio-mid' : 'prio-low');
+                    tCurr.innerHTML += `<tr>
+                        <td><b>${d.source}</b></td><td>${new Date(d.dateObserved).toLocaleString('ru-RU', {day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit'})}</td>
+                        <td>${d.tk || '-'}</td><td>${d.address}</td><td>${trDefType}</td><td>${trNetType}</td>
+                        <td><small>${d.note || '-'}</small></td><td>${d.detectedBy || '-'}</td><td style="text-align:center;"><span class="badge ${pClass}">${d.priority}</span></td>
+                        <td>${d.planDate ? new Date(d.planDate).toLocaleDateString('ru-RU') : '-'}</td>
+                        <td class="action-col" style="white-space: nowrap;"><button class="btn-act btn-edit" onclick="editDefect(${d.id})">⚙️</button><button class="btn-act btn-res" onclick="resolveDefect(${d.id})">✅</button><button class="btn-act btn-del" onclick="deleteDefect(${d.id})">🗑️</button></td>
+                    </tr>`;
+                } else {
+                    archFiltered++;
+                    const msDiff = safeDateMs(d.resolveDate) - safeDateMs(d.dateObserved);
+                    if(msDiff > 0) { if(msDiff > maxMs) maxMs = msDiff; if(msDiff < minMs) minMs = msDiff; sumMs += msDiff; countMs++; }
+                    tArch.innerHTML += `<tr>
+                        <td><b>${d.source}</b></td><td>${d.address} <br><small>${d.tk || ''}</small></td><td>${trDefType}</td>
+                        <td>${new Date(d.resolveDate).toLocaleString('ru-RU', {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'})}</td><td><b>${d.master}</b></td><td>${formatTimeDiff(msDiff)}</td>
+                        <td class="action-col" style="white-space: nowrap;"><button class="btn-act btn-edit" style="background:#f39c12; margin-right:4px;" onclick="revertDefect(${d.id})">↩️</button><button class="btn-act btn-del" onclick="deleteDefect(${d.id})">🗑️</button></td>
+                    </tr>`;
+                }
+            }
+        });
+
+        document.getElementById('countActiveGlobal').innerText = activeFiltered; document.getElementById('countArchGlobal').innerText = archFiltered;
+        document.getElementById('statMinTime').innerText = countMs > 0 ? formatTimeDiff(minMs) : '-'; document.getElementById('statMaxTime').innerText = countMs > 0 ? formatTimeDiff(maxMs) : '-'; document.getElementById('statAvgTime').innerText = countMs > 0 ? formatTimeDiff(sumMs / countMs) : '-';
+        if (!document.getElementById('tab-analytics').classList.contains('hidden')) renderAnalytics();
+    }
+
+    function showTab(t, btn) { document.querySelectorAll('.panel').forEach(p => p.classList.add('hidden')); document.getElementById('tab-' + t).classList.remove('hidden'); document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); if (t === 'analytics') renderAnalytics(); }
+    function exportData() { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(defects, null, 2)], {type: 'application/json'})); a.download = `DEFECTS_KTEK_${new Date().toISOString().slice(0,10)}.json`; a.click(); }
+    function importData(e) { const reader = new FileReader(); reader.onload = (ev) => { try { defects = JSON.parse(ev.target.result); applyFilters(); alert('Успех!'); } catch(err) { alert('Ошибка файла!'); } }; reader.readAsText(e.target.files[0]); }
+
+    let charts = {};
+    function renderAnalytics() {
+        const ctxS = document.getElementById('chartSources').getContext('2d'); const ctxM = document.getElementById('chartMasters').getContext('2d');
+        if(charts.s) charts.s.destroy(); if(charts.m) charts.m.destroy();
+        const sMap = {}, mMap = {};
+        defects.forEach(d => {
+            if((document.getElementById('filterSource').value === "ALL" || d.source === document.getElementById('filterSource').value)) {
+                sMap[d.source] = (sMap[d.source] || 0) + 1; if (d.resolved && d.master) mMap[d.master] = (mMap[d.master] || 0) + 1;
+            }
+        });
+        charts.s = new Chart(ctxS, { type: 'bar', data: { labels: Object.keys(sMap), datasets: [{ label: 'Ақаулар / Дефекты', data: Object.values(sMap), backgroundColor: '#3498db' }] }, options: { responsive: true, maintainAspectRatio: false } });
+        charts.m = new Chart(ctxM, { type: 'bar', data: { labels: Object.keys(mMap), datasets: [{ label: 'Жойылды / Устранено', data: Object.values(mMap), backgroundColor: '#27ae60' }] }, options: { responsive: true, maintainAspectRatio: false } });
+    }
+
+    document.querySelectorAll('[data-lang]').forEach(el => { const key = el.getAttribute('data-lang'); if(dict[currentLang][key]) el.innerText = dict[currentLang][key]; });
+    applyFilters();
+</script>
+
+</body>
+</html>
