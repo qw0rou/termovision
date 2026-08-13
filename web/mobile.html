@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>HeatNet Field — Полевой режим</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI'; background: #071426; color: #e9f2fc; }
+    
+    #app { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+    
+    header {
+      background: linear-gradient(90deg, #0a1a30, #0d2240);
+      border-bottom: 1px solid #22466a;
+      padding: 12px 16px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    header h1 { font-size: 16px; font-weight: 600; }
+    header .status { font-size: 11px; color: #9db5cd; }
+    
+    main { flex: 1; overflow-y: auto; padding: 16px; }
+    
+    .view { display: none; }
+    .view.active { display: block; }
+    
+    .task-card {
+      background: #0d1f34;
+      border: 1px solid #22466a;
+      border-radius: 8px;
+      padding: 14px;
+      margin-bottom: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .task-card:active { background: #112b45; }
+    .task-card.high-priority { border-left: 4px solid #ef4444; }
+    
+    .task-title { font-weight: 600; margin-bottom: 6px; }
+    .task-meta { font-size: 12px; color: #9db5cd; }
+    
+    .form-group {
+      margin-bottom: 14px;
+    }
+    .form-group label {
+      display: block;
+      font-size: 12px;
+      color: #a8dbff;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .form-group input, .form-group textarea, .form-group select {
+      width: 100%;
+      padding: 10px;
+      background: #0a1729;
+      border: 1px solid #22466a;
+      border-radius: 6px;
+      color: #fff;
+      font-family: inherit;
+    }
+    .form-group textarea { min-height: 80px; resize: vertical; }
+    
+    .btn {
+      width: 100%;
+      padding: 12px;
+      background: #1677b8;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      margin-bottom: 10px;
+    }
+    .btn:active { opacity: 0.8; }
+    .btn-secondary { background: #0a1729; border: 1px solid #22466a; color: #a8dbff; }
+    .btn-danger { background: #dc2626; }
+    
+    .camera-section {
+      margin: 16px 0;
+      text-align: center;
+    }
+    .camera-preview {
+      width: 100%;
+      max-width: 300px;
+      height: 200px;
+      background: #0a1729;
+      border: 2px dashed #22466a;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 10px auto;
+      font-size: 12px;
+      color: #9db5cd;
+    }
+    
+    .checklist {
+      background: #0a1729;
+      border: 1px solid #22466a;
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 12px;
+    }
+    .checklist-item {
+      display: flex;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid #16293f;
+    }
+    .checklist-item:last-child { border-bottom: none; }
+    .checklist-item input { width: 18px; height: 18px; margin-right: 10px; cursor: pointer; }
+    .checklist-item label { flex: 1; cursor: pointer; }
+    
+    .gps-indicator {
+      background: #0a1729;
+      border: 1px solid #22466a;
+      border-radius: 6px;
+      padding: 10px;
+      margin-bottom: 12px;
+      font-size: 12px;
+    }
+    .gps-status { margin-top: 6px; }
+    .status-dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-right: 6px;
+    }
+    .status-dot.active { background: #22c55e; }
+    .status-dot.inactive { background: #64748b; }
+    
+    footer {
+      background: #0d1f34;
+      border-top: 1px solid #22466a;
+      padding: 12px 16px;
+      display: flex;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    footer button {
+      flex: 1;
+      padding: 10px;
+      background: #16324d;
+      color: #a8dbff;
+      border: 1px solid #22466a;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    footer button.active { background: #1677b8; color: #fff; }
+    
+    .empty { text-align: center; color: #9db5cd; padding: 24px; }
+  </style>
+</head>
+<body>
+
+<div id="app">
+  <header>
+    <div>
+      <h1>🔥 HeatNet Field</h1>
+      <div class="status" id="header-status">Отключено</div>
+    </div>
+    <div style="font-size: 12px; color: #9db5cd;">
+      <div id="worker-name">Бригада</div>
+    </div>
+  </header>
+  
+  <main>
+    <!-- TASKS VIEW -->
+    <div id="tasks-view" class="view active">
+      <h2 style="margin-bottom: 16px; font-size: 16px;">Мои задания</h2>
+      <div id="tasks-list"></div>
+    </div>
+    
+    <!-- TASK DETAIL -->
+    <div id="task-detail-view" class="view">
+      <div style="margin-bottom: 16px;">
+        <button class="btn btn-secondary" onclick="app.showView('tasks')">← Назад к списку</button>
+      </div>
+      
+      <div id="task-header" style="background: #0d1f34; border: 1px solid #22466a; border-radius: 8px; padding: 14px; margin-bottom: 16px;">
+        <h2 id="task-title" style="margin-bottom: 8px;"></h2>
+        <div id="task-info" style="font-size: 12px; color: #9db5cd;"></div>
+      </div>
+      
+      <!-- GPS INDICATOR -->
+      <div class="gps-indicator">
+        <div>Текущее местоположение</div>
+        <div class="gps-status">
+          <span class="status-dot inactive" id="gps-dot"></span>
+          <span id="gps-coords">Не определено</span>
+        </div>
+      </div>
+      
+      <!-- INSPECTION CHECKLIST -->
+      <h3 style="margin-bottom: 10px; font-size: 13px;">Чек-лист осмотра</h3>
+      <div class="checklist">
+        <div class="checklist-item">
+          <input type="checkbox" id="check-1" onchange="app.updateChecklist()">
+          <label for="check-1">Визуальный осмотр конструкции</label>
+        </div>
+        <div class="checklist-item">
+          <input type="checkbox" id="check-2" onchange="app.updateChecklist()">
+          <label for="check-2">Проверка целостности изоляции</label>
+        </div>
+        <div class="checklist-item">
+          <input type="checkbox" id="check-3" onchange="app.updateChecklist()">
+          <label for="check-3">Проверка запорной арматуры</label>
+        </div>
+        <div class="checklist-item">
+          <input type="checkbox" id="check-4" onchange="app.updateChecklist()">
+          <label for="check-4">Проверка дренажа</label>
+        </div>
+        <div class="checklist-item">
+          <input type="checkbox" id="check-5" onchange="app.updateChecklist()">
+          <label for="check-5">Измерение температуры</label>
+        </div>
+      </div>
+      
+      <!-- NOTES -->
+      <div class="form-group">
+        <label>Примечания и комментарии</label>
+        <textarea id="inspection-note" placeholder="Что вы обнаружили? Какие проблемы?"></textarea>
+      </div>
+      
+      <!-- CAMERA -->
+      <div class="camera-section">
+        <h3 style="margin-bottom: 10px; font-size: 13px;">Фотография объекта</h3>
+        <div class="camera-preview" id="camera-preview">📷 Камера</div>
+        <input type="file" id="photo-input" accept="image/*" capture="environment" style="display: none;" onchange="app.onPhotoSelected()">
+        <button class="btn btn-secondary" onclick="document.getElementById('photo-input').click()">📸 Сделать фото</button>
+      </div>
+      
+      <!-- DEFECT SECTION -->
+      <h3 style="margin-bottom: 10px; font-size: 13px;">Обнаруженные дефекты</h3>
+      <div class="form-group">
+        <label>Тип дефекта</label>
+        <select id="defect-type">
+          <option>-- Нет дефектов --</option>
+          <option>Повреждение изоляции</option>
+          <option>Коррозия</option>
+          <option>Утечка</option>
+          <option>Повреждение покрытия</option>
+          <option>Другое</option>
+        </select>
+      </div>
+      
+      <div class="form-group">
+        <label>Описание дефекта</label>
+        <textarea id="defect-description" placeholder="Подробно опишите обнаруженный дефект..."></textarea>
+      </div>
+      
+      <div class="form-group">
+        <label>Приоритет ремонта</label>
+        <select id="defect-priority">
+          <option value="2">Низкий</option>
+          <option value="3" selected>Средний</option>
+          <option value="4">Высокий</option>
+          <option value="5">Критический</option>
+        </select>
+      </div>
+      
+      <button class="btn" onclick="app.saveInspection()" style="background: #1677b8;">✅ Завершить осмотр</button>
+      <button class="btn btn-secondary" onclick="app.showView('tasks')">← Отмена</button>
+    </div>
+  </main>
+  
+  <footer>
+    <button class="active" data-view="tasks-view">📋 Задания</button>
+    <button data-view="sync">🔄 Синхро</button>
+    <button data-view="profile">👤 Профиль</button>
+  </footer>
+</div>
+
+<script>
+// Simple PWA offline-first app
+const app = {
+  currentTask: null,
+  currentPhoto: null,
+  gpsWatching: false,
+  checklistState: {},
+  
+  init() {
+    this.registerServiceWorker();
+    this.setupEventHandlers();
+    this.loadTasks();
+    this.startGPS();
+    this.updateStatus();
+  },
+  
+  registerServiceWorker() {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').catch(e => console.log('SW registration failed:', e));
+    }
+  },
+  
+  setupEventHandlers() {
+    document.querySelectorAll('footer button').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const view = e.target.dataset.view;
+        if (view === 'tasks-view') this.showView('tasks');
+        else if (view === 'sync') this.syncOfflineData();
+        else if (view === 'profile') this.showProfile();
+      });
+    });
+  },
+  
+  async loadTasks() {
+    try {
+      const res = await fetch('/api/mobile/tasks');
+      const tasks = await res.json();
+      
+      const list = document.getElementById('tasks-list');
+      if (!tasks.length) {
+        list.innerHTML = '<div class="empty">Нет заданий для выполнения</div>';
+        return;
+      }
+      
+      list.innerHTML = tasks.map(t => `
+        <div class="task-card ${t.priority >= 4 ? 'high-priority' : ''}" onclick="app.selectTask('${t.id}')">
+          <div class="task-title">${t.title || 'Осмотр'}</div>
+          <div class="task-meta">
+            <div>📍 ${t.node_id}</div>
+            <div>⏰ ${new Date(t.planned_at).toLocaleDateString('ru')}</div>
+            ${t.status ? `<div>Статус: ${t.status}</div>` : ''}
+          </div>
+        </div>
+      `).join('');
+    } catch (e) {
+      console.error('Failed to load tasks:', e);
+      document.getElementById('tasks-list').innerHTML = '<div class="empty">⚠️ Ошибка загрузки задач</div>';
+    }
+  },
+  
+  async selectTask(taskId) {
+    try {
+      const res = await fetch(`/api/mobile/task/${taskId}`);
+      const data = await res.json();
+      
+      this.currentTask = data.task;
+      document.getElementById('task-title').textContent = data.task.title || 'Осмотр объекта';
+      document.getElementById('task-info').innerHTML = `
+        <div>Объект: ${data.node.name || data.task.node_id}</div>
+        <div>Адрес: ${data.node.notes || 'Не указан'}</div>
+      `;
+      
+      this.showView('task-detail');
+    } catch (e) {
+      alert('Ошибка: ' + e.message);
+    }
+  },
+  
+  showView(name) {
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.getElementById(name + '-view').classList.add('active');
+  },
+  
+  startGPS() {
+    if (!navigator.geolocation) return;
+    this.gpsWatching = navigator.geolocation.watchPosition(
+      (pos) => {
+        const { latitude, longitude, accuracy } = pos.coords;
+        document.getElementById('gps-coords').textContent = `${latitude.toFixed(4)}, ${longitude.toFixed(4)} (±${Math.round(accuracy)}м)`;
+        document.getElementById('gps-dot').className = 'status-dot active';
+        this.currentGPS = { lat: latitude, lon: longitude };
+      },
+      (err) => console.log('GPS error:', err)
+    );
+  },
+  
+  updateChecklist() {
+    this.checklistState = {};
+    for (let i = 1; i <= 5; i++) {
+      const cb = document.getElementById('check-' + i);
+      if (cb) this.checklistState[i] = cb.checked;
+    }
+  },
+  
+  onPhotoSelected() {
+    const input = document.getElementById('photo-input');
+    if (!input.files[0]) return;
+    
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      this.currentPhoto = e.target.result;
+      document.getElementById('camera-preview').innerHTML = '✅ Фото сохранено';
+    };
+    reader.readAsDataURL(input.files[0]);
+  },
+  
+  async saveInspection() {
+    if (!this.currentTask) return alert('Нет активного задания');
+    
+    try {
+      const payload = {
+        taskId: this.currentTask.id,
+        nodeId: this.currentTask.node_id,
+        worker: 'field-worker',
+        result: JSON.stringify(this.checklistState),
+        note: document.getElementById('inspection-note').value,
+        photos: this.currentPhoto ? [this.currentPhoto] : [],
+        lat: this.currentGPS?.lat,
+        lon: this.currentGPS?.lon
+      };
+      
+      const res = await fetch('/api/mobile/inspections', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      
+      if (!res.ok) throw new Error('Server error');
+      
+      // Save defect if selected
+      const defectType = document.getElementById('defect-type').value;
+      if (defectType !== '-- Нет дефектов --') {
+        await fetch('/api/mobile/defects', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            nodeId: this.currentTask.node_id,
+            type: defectType,
+            description: document.getElementById('defect-description').value,
+            priority: +document.getElementById('defect-priority').value,
+            worker: 'field-worker',
+            photos: this.currentPhoto ? [this.currentPhoto] : []
+          })
+        });
+      }
+      
+      alert('✅ Осмотр сохранён и отправлен на сервер');
+      this.showView('tasks');
+      this.loadTasks();
+      
+    } catch (e) {
+      // Store for offline sync
+      console.error('Save failed, storing for sync:', e);
+      this.storeForSync('inspection_complete', {
+        taskId: this.currentTask.id,
+        nodeId: this.currentTask.node_id,
+        note: document.getElementById('inspection-note').value,
+        photo: this.currentPhoto
+      });
+      alert('⚠️ Осмотр сохранён локально. Он будет отправлен при восстановлении связи.');
+      this.showView('tasks');
+    }
+  },
+  
+  storeForSync(type, data) {
+    let queue = JSON.parse(localStorage.getItem('syncQueue') || '[]');
+    queue.push({ type, data, timestamp: Date.now() });
+    localStorage.setItem('syncQueue', JSON.stringify(queue));
+  },
+  
+  async syncOfflineData() {
+    try {
+      const queue = JSON.parse(localStorage.getItem('syncQueue') || '[]');
+      if (!queue.length) {
+        alert('Нечего синхронизировать');
+        return;
+      }
+      
+      const res = await fetch('/api/mobile/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ actions: queue })
+      });
+      
+      if (res.ok) {
+        localStorage.removeItem('syncQueue');
+        alert('✅ Все данные синхронизированы');
+      }
+    } catch (e) {
+      alert('⚠️ Синхронизация неудачна: ' + e.message);
+    }
+  },
+  
+  updateStatus() {
+    navigator.onLine
+      ? (document.getElementById('header-status').textContent = '🟢 Онлайн',
+        document.getElementById('header-status').style.color = '#22c55e')
+      : (document.getElementById('header-status').textContent = '🔴 Оффлайн',
+        document.getElementById('header-status').style.color = '#ef4444');
+  },
+  
+  showProfile() {
+    alert('Имя: Бригада A\nСтатус: Активна\nВремя: ' + new Date().toLocaleTimeString('ru'));
+  }
+};
+
+document.addEventListener('DOMContentLoaded', () => app.init());
+window.addEventListener('online', () => app.updateStatus());
+window.addEventListener('offline', () => app.updateStatus());
+</script>
+
+</body>
+</html>
