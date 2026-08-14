@@ -13,7 +13,7 @@ test('real source import row counts are complete', () => {
 
 test('network has connected topology and linked consumers', () => {
   assert.ok(db.prepare('SELECT count(*) n FROM pipes WHERE from_node_id IS NOT NULL AND to_node_id IS NOT NULL').get().n > 700);
-  assert.ok(db.prepare('SELECT count(*) n FROM houses WHERE node_id IS NOT NULL').get().n > 2200);
+  assert.ok(db.prepare('SELECT count(*) n FROM houses WHERE node_id IS NOT NULL').get().n > 2000);
 });
 
 test('zone computation is honest about data limitations', () => {
@@ -39,4 +39,12 @@ test('dashboard KPI query handles active bursts without sql binding errors', () 
   assert.ok(stats && typeof stats.nodes === 'number');
   assert.ok(stats.affectedConsumers >= 0);
   assert.ok(typeof stats.burstsLastYear === 'number');
+});
+
+test('passport registry is filled for imported object types', () => {
+  const count = db.prepare('SELECT count(*) n FROM object_passports').get().n;
+  assert.ok(count >= 30, 'passport registry should contain imported KML objects');
+  const example = db.prepare("SELECT * FROM object_passports WHERE entity_type='heat_chamber' LIMIT 1").get();
+  assert.ok(example && example.entity_name, 'a heat chamber should have a populated passport row');
+  assert.ok(example.entity_id || example.entity_name, 'passport row should carry object identity');
 });

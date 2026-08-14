@@ -1,0 +1,1138 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Теплосеть: Реестр и Отключения (v3.12.0 - Сезонники + RU/KZ)</title>
+<style>
+:root{--bg:#0f172a;--panel:#1e293b;--muted:#334155;--text:#f1f5f9;--accent:#3b82f6;--accent-hover:#2563eb;--ok:#10b981;--warn:#f59e0b;--red:#ef4444;--line:#475569;--font: system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;}
+*{box-sizing:border-box;outline:none}
+body{margin:0;background:var(--bg);color:var(--text);font:13px/1.4 var(--font);height:100vh;display:flex;flex-direction:column;overflow:hidden}
+
+header{padding:8px 12px;background:#111827;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;height:55px;flex-shrink:0}
+h1{margin:0;font-size:16px;font-weight:600;display:flex;align-items:center;gap:8px}
+.badge{font-size:11px;padding:1px 6px;border-radius:4px;background:var(--accent);color:#fff}
+.dashboard{display:flex;gap:15px;font-size:12px;align-items:center;}
+.stat-item b{color:var(--accent)}
+.stat-item.alert b{color:var(--red)}
+
+.stat-item.loss {color:#f43f5e; background:rgba(244,63,94,0.1); padding:4px 10px; border-radius:6px; border:1px solid rgba(244,63,94,0.3);}
+.stat-item.loss b {color:#f43f5e; font-size:15px; text-shadow: 0 0 5px rgba(244,63,94,0.4);}
+
+.stat-item.forecast {color:#38bdf8; background:rgba(56,189,248,0.1); padding:4px 10px; border-radius:6px; border:1px solid rgba(56,189,248,0.3); font-weight:500; cursor:pointer; transition:0.2s; user-select:none;}
+.stat-item.forecast:hover {background:rgba(56,189,248,0.2);}
+.stat-item.forecast.active {background:#38bdf8; color:#fff; border-color:#38bdf8; box-shadow: 0 0 10px rgba(56,189,248,0.5);}
+.stat-item.forecast.active b {color:#fff;}
+
+main{flex:1;display:grid;grid-template-columns:420px 1fr;gap:0;overflow:hidden}
+aside{background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;overflow-y:auto;padding:10px}
+section.content{display:flex;flex-direction:column;overflow:hidden;background:#0f172a}
+
+.card{background:#162032;border:1px solid var(--line);border-radius:6px;margin-bottom:10px;padding:8px}
+.card h2{margin:-8px -8px 8px -8px;padding:6px 10px;background:#1f2937;font-size:13px;border-bottom:1px solid var(--line);border-radius:6px 6px 0 0}
+.row{display:flex;gap:8px;margin-bottom:6px;align-items:center}
+.row.wrap{flex-wrap:wrap}
+.col{flex:1}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px} 
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:6px}
+
+label{display:block;font-size:11px;color:#94a3b8;margin-bottom:2px}
+input,select,textarea{width:100%;background:#0f172a;border:1px solid var(--line);color:#fff;padding:5px;border-radius:4px;font-family:inherit;font-size:12px}
+input:focus,select:focus,textarea:focus{border-color:var(--accent)}
+textarea{resize:vertical;min-height:40px}
+input[type="datetime-local"]::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; }
+
+button{background:#1f2937;border:1px solid var(--line);color:#e2e8f0;padding:5px 10px;border-radius:4px;cursor:pointer;font-size:12px;white-space:nowrap; border:1px solid #475569;}
+button:hover{background:#374151}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+button.primary:hover{background:var(--accent-hover)}
+button.danger{background:rgba(239,68,68,0.2);border-color:var(--red);color:var(--red)}
+button.danger:hover{background:var(--red);color:#fff}
+button.sm{padding:2px 6px;font-size:11px}
+
+.toolbar{padding:8px;border-bottom:1px solid var(--line);background:#1e293b;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.table-wrap{flex:1;overflow:auto;position:relative}
+table{width:100%;border-collapse:collapse;font-size:12px}
+thead th{position:sticky;top:0;background:#111827;z-index:10;text-align:left;padding:6px;border-bottom:1px solid var(--line);color:#94a3b8;font-weight:500}
+tbody td{padding:5px 6px;border-bottom:1px solid #1e293b;vertical-align:top}
+tbody tr:hover{background:#1e293b}
+tbody tr.selected{background:rgba(59,130,246,0.15)}
+tbody tr.is-out{background:rgba(239,68,68,0.1)}
+.status-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px}
+.ok .status-dot{background:var(--ok)}
+.err .status-dot{background:var(--red)}
+.link{color:var(--accent);cursor:pointer;text-decoration:underline}
+.clickable{cursor:pointer}
+.hidden{display:none}
+.action-del{color:var(--red); cursor:pointer; font-weight:bold; padding:0 4px;}
+
+.scroll-y{overflow-y:auto;max-height:300px;border:1px solid var(--line);border-radius:4px}
+.modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);display:flex;justify-content:center;align-items:center;z-index:100;visibility:hidden;opacity:0;transition:opacity 0.2s}
+.modal-overlay.active{visibility:visible;opacity:1}
+.modal-content{background:var(--panel);padding:20px;border-radius:8px;width:380px;box-shadow:0 5px 15px rgba(0,0,0,0.5)}
+.modal-content h3{margin-top:0;font-size:16px;border-bottom:1px solid var(--line);padding-bottom:10px}
+.modal-content label{display:block;margin-bottom:5px;font-size:12px;color:#94a3b8}
+.modal-content input, .modal-content select{margin-bottom:12px;font-size:13px;padding:6px}
+
+@media print {
+    @page { size: landscape; margin: 10mm; }
+    header, aside, .toolbar, #massPanel, .badge, .dashboard, #checkAll { display: none !important; }
+    body, main, section.content, .table-wrap { height: auto !important; overflow: visible !important; display: block !important; background: #fff !important; color: #000 !important; }
+    table { font-size: 11px !important; border-collapse: collapse !important; width: 100% !important; }
+    table th, table td { border: 1px solid #000 !important; padding: 6px !important; color: #000 !important; background: #fff !important; }
+    table th { background: #eee !important; position: static !important; font-weight:bold; }
+    table th:nth-child(1), table td:nth-child(1) { display: none !important; } 
+    .link { color: #000 !important; text-decoration: none !important; pointer-events: none; }
+    .status-dot { border: 1px solid #000; }
+    .is-out td { background: #f9f9f9 !important; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1 data-i18n="app_title">🔥 Теплосеть <span class="badge">v3.12.0 А.Зиненко</span></h1>
+  <div class="dashboard">
+    <div class="stat-item"><span data-i18n="stat_total">Всего в базе:</span> <b id="d_total">0</b></div>
+    <div class="stat-item forecast" id="btnToggleForecast" title="Нажми, чтобы показать только те дома, что ты выбрал галочками">🎯 <span data-i18n="stat_forecast">Прогноз:</span> <b id="d_forecast" style="font-size:14px;">0</b></div>
+    <div class="stat-item alert"><span data-i18n="stat_off">Отключено:</span> <b id="d_off">0</b></div>
+    <div class="stat-item loss"><span data-i18n="stat_loss">Потери тепла:</span> <b id="d_loss_load">0.000</b> Гкал/ч</div>
+    <div class="stat-item"><span data-i18n="stat_active">Заявок:</span> <b id="d_active">0</b></div>
+  </div>
+  <div class="row">
+    <button id="btnLangToggle" class="primary sm" style="background:#8b5cf6; border-color:#8b5cf6; margin-right: 15px;">🇷🇺 RU / 🇰🇿 KZ</button>
+    <button id="btnResetDB" class="danger sm" style="margin-right:8px; background:var(--red); color:#fff;" data-i18n="btn_reset_db">🗑️ Сброс БД</button>
+    <button id="btnResetAllOutages" class="danger sm" data-i18n="btn_reset_out">💥 Сброс статусов</button>
+    <button id="btnExport" data-i18n="btn_export">💾 Бэкап (JSON)</button>
+    <label style="margin:0"><button onclick="document.getElementById('fileImport').click()" data-i18n="btn_import">📂 Импорт (JSON)</button>
+    <input type="file" id="fileImport" accept=".json" class="hidden"></label>
+    
+    <label style="margin-left:8px;"><button class="primary sm" style="background:#10b981; border-color:#10b981; padding:4px 8px; font-size:12px;" onclick="document.getElementById('csvImport').click()" data-i18n="btn_csv">📥 Загрузить Юр.лиц (CSV)</button>
+    <input type="file" id="csvImport" accept=".csv" class="hidden"></label>
+  </div>
+</header>
+
+<main>
+  <aside>
+    <div class="card">
+      <h2><span data-i18n="card_title">🏠 Карточка дома / Объекта</span> <span id="view_id" style="float:right;font-weight:400;opacity:0.5;font-size:10px">ID: ...</span></h2>
+      <input type="hidden" id="f_id">
+      <div class="grid-2">
+        <div><label data-i18n="lbl_street">Улица</label><input id="f_street"></div>
+        <div><div><label data-i18n="lbl_house">Дом</label><input id="f_house"></div></div>
+      </div>
+      <div class="grid-3">
+        <div><label data-i18n="lbl_block">Корпус</label><input id="f_block"></div>
+        <div><label data-i18n="lbl_tk">ТК (отпайка)</label><input id="f_tk" placeholder="21-03"></div>
+        <div><label data-i18n="lbl_owner">Принадлежность</label>
+            <select id="f_owner">
+                <option value="our">Наш баланс</option>
+                <option value="consumer">Физ. лицо</option>
+                <option value="juridical">Юр. лицо (Комм.)</option>
+                <option value="social" style="color:#38bdf8; font-weight:bold;">Соц. объект / Бюджет</option>
+                <option value="ksk" style="color:#f59e0b; font-weight:bold;">КСК / ОСИ</option>
+            </select>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col"><label data-i18n="lbl_source">Источник (ТЭЦ/РК/БМК)</label>
+          <select id="f_source">
+            <option value="">Не указано</option><option value="TETs1">ТЭЦ-1</option><option value="TETs2">ТЭЦ-2</option><option value="RK3">РК-3</option><option value="BMK92">БМК-92</option><option value="BMK93">БМК-93</option><option value="BMKAero">БМК Аэропорт</option><option value="BMKAA">БМК Алтын Арман</option><option value="BMKBereke">БМК Береке</option><option value="BMKKunai">БМК Кунай</option><option value="BMKDruzhba">БМК Дружба</option><option value="OTHER">Другой</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid-3">
+        <div><label data-i18n="lbl_vdiam">Задвижка (Ø)</label><input id="f_vdiam" placeholder="Ду 100"></div>
+        <div><div><label data-i18n="lbl_wdiam">Шайба (Ø)</label><input id="f_wdiam" placeholder="Ду 50"></div></div>
+        <div><label data-i18n="lbl_sq">Площадь</label><input id="f_sq" type="number"></div>
+      </div>
+      <div class="grid-3">
+        <div><label data-i18n="lbl_floors">Этажей</label><input id="f_floors" type="number"></div>
+        <div><label data-i18n="lbl_flats">Квартир</label><input id="f_flats" type="number"></div>
+        <div><label style="color:#f43f5e; font-weight:bold;" data-i18n="lbl_load">Нагрузка (Гкал/ч)</label><input id="f_load" type="number" step="0.001" placeholder="0.000"></div> 
+      </div>
+      <div class="grid-3">
+        <div><label data-i18n="lbl_mgmt">Управл. орг. / Абонент</label><input id="f_mgmt" placeholder="Напр. ТОО или КСК"></div>
+        <div><label data-i18n="lbl_contact">Контакт</label><input id="f_contact"></div>
+        <div style="display:flex; align-items:center; padding-top:14px;">
+            <label style="color:#10b981; font-weight:bold; font-size:12px; cursor:pointer; display:flex; align-items:center; gap:5px;">
+                <input type="checkbox" id="f_seasonal" style="width:16px; height:16px;"> <span data-i18n="lbl_seasonal">Сезонный объект</span>
+            </label>
+        </div>
+      </div>
+      <div style="margin-bottom:6px"><label data-i18n="lbl_note">Примечание / Тип объекта</label><textarea id="f_note" rows="1" placeholder="Школа, садик, АБК..."></textarea></div>
+      <div class="row" style="justify-content:space-between">
+        <div class="row">
+          <button id="btnSave" class="primary" data-i18n="btn_save">Сохранить</button>
+          <button id="btnNew" data-i18n="btn_new">Очистить</button>
+        </div>
+        <button id="btnDelete" class="danger" data-i18n="btn_del">Удалить</button>
+      </div>
+    </div>
+
+    <div class="card" style="border-color:var(--red)">
+      <h2><span data-i18n="card_out">⚠️ Отключения</span></h2>
+      <div class="row" style="background:rgba(0,0,0,0.2);padding:4px;border-radius:4px;margin-bottom:8px">
+        <span data-i18n="lbl_status">Статус:</span> <b id="h_status" style="margin-left:6px;color:var(--ok)">В работе</b>
+      </div>
+      <div class="row"> 
+        <div class="col"><label data-i18n="lbl_burst">ID Порыва</label><input id="o_burstId" placeholder="Напр. P2025-12-10-1"></div>
+      </div>
+      <div class="grid-2">
+        <div><label data-i18n="lbl_reason">Причина</label>
+          <select id="o_reason"><option>Порыв</option><option>Капремонт</option><option>Дефект</option><option>Потребитель</option><option>Опрессовка</option><option>Профилактика</option></select>
+        </div>
+        <div><label data-i18n="lbl_comment">Комментарий</label><input id="o_comment"></div>
+      </div>
+      <div class="grid-2">
+        <div><label data-i18n="lbl_start">Начало</label><input id="o_start" type="datetime-local"></div>
+        <div><label data-i18n="lbl_end">План включения</label><input id="o_end" type="datetime-local"></div>
+      </div>
+      <div class="row" style="justify-content:space-between;">
+        <button id="btnAddOutage" class="primary" style="background:var(--red);border-color:var(--red);color:#fff" data-i18n="btn_add_out">🚫 ОТКЛЮЧИТЬ</button>
+        <button id="btnUpdateOutageFields" class="primary sm" style="background:var(--warn);border-color:var(--warn);color:#111" data-i18n="btn_upd_out">💾 Обновить План/Коммент.</button>
+        <button id="btnCloseOutage" class="primary" data-i18n="btn_close_out">✅ ВКЛЮЧИТЬ (Факт.)</button>
+      </div>
+      <div class="row" style="margin-top: 10px;">
+        <button id="btnForceCloseOutage" class="danger sm" data-i18n="btn_force_out">💥 ОЧИСТИТЬ ОТКЛЮЧЕНИЯ ДОМА</button>
+      </div>
+      <hr>
+      <label data-i18n="lbl_hist_out">История отключений:</label>
+      <div class="scroll-y" style="max-height:120px"> 
+        <table id="tblHistory"><tbody></tbody></table>
+      </div>
+    </div>
+
+    <div class="card" style="border-color:#38bdf8">
+        <h2><span data-i18n="card_comp">🗣️ Жалобы и замеры (Наладка)</span></h2>
+        <input type="hidden" id="c_id">
+        <div class="row" style="background:rgba(0,0,0,0.2);padding:4px;border-radius:4px;margin-bottom:8px">
+            <span data-i18n="lbl_act_comp">Активная жалоба:</span> <b id="c_status_display" style="margin-left:6px;color:#94a3b8">Нет</b>
+        </div>
+        <div class="grid-2">
+            <div><label data-i18n="lbl_c_date">Дата жалобы</label><input id="c_date" type="date"></div>
+            <div><label data-i18n="lbl_c_type">Суть жалобы</label>
+                <select id="c_type">
+                    <option>Низкая температура</option><option>Высокая температура</option><option>Шум в системе</option><option>Утечка/Парение</option><option>Другое</option>
+                </select>
+            </div>
+        </div>
+        <label style="color:#38bdf8; margin-top:5px;" data-i18n="lbl_src_params">Параметры источника</label>
+        <div class="grid-3">
+            <div><label data-i18n="lbl_t_out">Т нар.возд.</label><input id="c_t_out" placeholder="°C"></div>
+            <div><label data-i18n="lbl_c_src_t">Т (П/О)</label><input id="c_src_t" placeholder="95/70"></div>
+            <div><label data-i18n="lbl_c_src_p">Р (П/О)</label><input id="c_src_p" placeholder="8.0/4.0"></div>
+        </div>
+        <label style="color:var(--ok); margin-top:5px;" data-i18n="lbl_house_params">Фактические замеры в доме</label>
+        <div class="grid-2">
+            <div><label data-i18n="lbl_c_house_t">Т (П/О) в УТ</label><input id="c_house_t" placeholder="70/50"></div>
+            <div><label data-i18n="lbl_c_house_p">Р (П/О) в УТ</label><input id="c_house_p" placeholder="5.0/4.0"></div>
+        </div>
+        <div class="grid-2" style="margin-top:6px">
+            <div><label data-i18n="lbl_c_state">Статус</label>
+                <select id="c_state"><option value="open">Открыта (В работе)</option><option value="unconfirmed">Не подтверждена</option><option value="closed">Закрыта (Решена)</option></select>
+            </div>
+            <div><label data-i18n="lbl_c_action">Принятые меры</label>
+                <select id="c_action">
+                    <option value="">(Не выбрано)</option><option>Установка шайбы</option><option>Расточка шайбы</option><option>Открытие задвижки</option><option>Прикрытие задвижки</option><option>Очистка грязевика/сопла</option><option>Промывка системы</option><option>Рекомендация КСК</option>
+                </select>
+            </div>
+        </div>
+        <div style="margin-bottom:6px"><label data-i18n="lbl_c_comment">Комментарий к закрытию</label><textarea id="c_comment" rows="1"></textarea></div>
+        <div class="row" style="justify-content:space-between">
+            <button id="btnSaveComplaint" class="primary sm" style="background:#38bdf8; border-color:#38bdf8;" data-i18n="btn_save_comp">💾 Сохранить</button>
+            <button id="btnClearComplaint" class="sm" data-i18n="btn_new_comp">Новая запись</button>
+        </div>
+        <hr>
+        <label data-i18n="lbl_hist_comp">История жалоб:</label>
+        <div class="scroll-y" style="max-height:120px">
+            <table id="tblComplaints"><tbody></tbody></table>
+        </div>
+        <button id="btnDeleteAllHouseComplaints" class="danger sm" style="width:100%; margin-top:8px;" data-i18n="btn_del_all_comp">💥 Удалить ВСЕ жалобы дома</button>
+    </div>
+  </aside>
+
+  <section class="content">
+    <div class="toolbar">
+      <input id="q" placeholder="🔍 Поиск: адрес, ТК, абонент..." style="width:200px" data-i18n="plh_search">
+      <select id="filter_owner" style="width:100px">
+          <option value="all">Все балансы</option>
+          <option value="our">Наши</option>
+          <option value="consumer">Физ. лицо</option>
+          <option value="juridical">Юр. лица</option>
+          <option value="social">Соц. объекты</option>
+          <option value="ksk">КСК / ОСИ</option>
+      </select>
+      <select id="filter_source" style="width:90px"><option value="all">Источники</option><option value="TETs1">ТЭЦ-1</option><option value="TETs2">ТЭЦ-2</option><option value="RK3">РК-3</option><option value="BMK92">БМК-92</option><option value="BMK93">БМК-93</option><option value="BMKAero">БМК Аэропорт</option><option value="BMKAA">БМК Алтын Арман</option><option value="BMKBereke">БМК Береке</option><option value="BMKKunai">БМК Кунай</option><option value="BMKDruzhba">БМК Дружба</option><option value="OTHER">Другой</option></select>
+      
+      <label style="color:#fff;font-size:11px;display:flex;align-items:center;cursor:pointer;"><input type="checkbox" id="filter_off_only" style="margin-right:3px;"> <span data-i18n="flt_off">Откл.</span></label>
+      <label style="color:#38bdf8;font-size:11px;display:flex;align-items:center;cursor:pointer;"><input type="checkbox" id="filter_complaints" style="margin-right:3px;"> <span data-i18n="flt_comp">Жалобы</span></label>
+      <label style="color:#10b981;font-size:11px;display:flex;align-items:center;cursor:pointer;margin-left:5px;"><input type="checkbox" id="filter_seasonal" style="margin-right:3px;"> <span data-i18n="flt_seas">Сезонники</span></label>
+      
+      <div style="margin-left:auto; display:flex; gap:6px;">
+          <button id="btnPrint" class="primary sm" style="background:#64748b;border-color:#64748b;" data-i18n="btn_print">🖨️ Печать</button>
+          <span style="border-left:1px solid #475569; margin: 0 4px;"></span>
+          <button id="btnMassOut" class="danger sm" data-i18n="btn_m_out">🚫 Масс. Откл.</button>
+          <button id="btnMassIn" class="primary sm" style="background:var(--ok);border-color:var(--ok)" data-i18n="btn_m_in">✅ Масс. Вкл.</button>
+          <button id="btnMassPlanUpdate" class="primary sm" style="background:var(--warn);border-color:var(--warn);color:#111" data-i18n="btn_m_plan">📅 Масс. План</button>
+          <span style="border-left:1px solid #475569; margin: 0 4px;"></span>
+          <button id="btnMassComp" class="primary sm" style="background:#38bdf8;border-color:#38bdf8;" data-i18n="btn_m_comp">🗣️ Жал.</button>
+          <button id="btnMassCompClose" class="primary sm" style="background:var(--ok);border-color:var(--ok);" data-i18n="btn_m_comp_c">✅ Решить</button>
+      </div>
+    </div>
+    <div class="table-wrap"> 
+        <div id="massPanel" class="row wrap hidden" style="background:rgba(59,130,246,0.15);padding:6px;margin:0 0 10px 0;position:sticky;top:0;z-index:9">
+            Выбрано: <b id="m_count" style="margin: 0 4px;">0</b> объектов (Прогноз).
+            <button id="btnMassClear" class="danger sm" style="margin-left:10px;">❌ Снять выделение</button>
+            <button id="btnToggleEditFields" class="primary sm" style="margin-left:auto;">⮞ Редакт. данных</button>
+            <div id="massEditFields" class="row wrap" style="background:rgba(0,0,0,0.2);padding:4px;border-radius:4px;margin-left:auto; display: none;">
+                <select id="m_owner" style="width:100px; padding: 2px; font-size: 11px;">
+                    <option value="">(Баланс)</option><option value="our">Наш баланс</option><option value="consumer">Физ. лицо</option><option value="juridical">Юр. лицо</option><option value="social">Соц. объект</option><option value="ksk">КСК / ОСИ</option>
+                </select>
+                <select id="m_source" style="width:100px; padding: 2px; font-size: 11px;"><option value="">(Источник)</option><option value="TETs1">ТЭЦ-1</option><option value="TETs2">ТЭЦ-2</option><option value="RK3">РК-3</option><option value="BMK92">БМК-92</option><option value="BMK93">БМК-93</option><option value="BMKAero">БМК Аэропорт</option><option value="BMKAA">БМК Алтын Арман</option><option value="BMKBereke">БМК Береке</option><option value="BMKKunai">БМК Кунай</option><option value="BMKDruzhba">БМК Дружба</option><option value="OTHER">Другой</option></select>
+                <select id="m_seasonal" style="width:110px; padding: 2px; font-size: 11px;">
+                    <option value="">(Сезонность)</option>
+                    <option value="true">Сделать Сезонным</option>
+                    <option value="false">Снять Сезонность</option>
+                </select>
+                <input id="m_tk" placeholder="ТК" style="width:60px; padding: 2px; font-size: 11px;">
+                <input id="m_vdiam" placeholder="Задв. Ø" style="width:70px; padding: 2px; font-size: 11px;">
+                <input id="m_wdiam" placeholder="Шайба Ø" style="width:70px; padding: 2px; font-size: 11px;">
+                <button id="btnMassEditApply" class="primary sm" style="background:var(--ok);border-color:var(--ok)">Применить</button>
+            </div>
+        </div>
+        <table id="mainTable"> 
+            <thead> 
+                <tr>
+                    <th style="width:20px"><input type="checkbox" id="checkAll"></th>
+                    <th style="width:25%" data-i18n="th_addr">Адрес / Абонент</th>
+                    <th style="width:7%" data-i18n="th_tk">ТК</th>
+                    <th style="width:8%" data-i18n="th_cat">Категория</th>
+                    <th style="width:7%" data-i18n="th_load">Нагрузка</th>
+                    <th style="width:8%" data-i18n="th_src">Источник</th>
+                    <th style="width:7%" data-i18n="th_burst">ID Порыва</th> 
+                    <th style="width:10%" data-i18n="th_start">Начало Откл.</th>
+                    <th style="width:10%" data-i18n="th_end">Прогноз Вкл.</th> 
+                    <th style="width:10%" data-i18n="th_down">Простой (ч)</th>
+                </tr>
+            </thead> 
+            <tbody id="listBody"></tbody> 
+        </table>
+    </div>
+  </section>
+</main>
+
+<div id="massActionModal" class="modal-overlay">
+  <div class="modal-content">
+    <h3 id="modalTitle">Действие</h3>
+    
+    <div id="modalFieldReason" class="hidden">
+        <label>Причина:</label>
+        <select id="modalReason">
+            <option>Порыв</option><option>Капремонт</option><option>Дефект</option><option>Потребитель</option><option>Опрессовка</option><option>Профилактика</option>
+        </select>
+    </div>
+
+    <div id="modalFieldCompType" class="hidden">
+        <label>Суть жалобы:</label>
+        <select id="modalCompType">
+            <option>Низкая температура</option><option>Высокая температура</option><option>Шум в системе</option><option>Утечка/Парение</option><option>Другое</option>
+        </select>
+    </div>
+
+    <div id="modalFieldAction" class="hidden">
+        <label>Принятые меры по решению:</label>
+        <select id="modalAction">
+            <option value="Без мер">(Не выбрано)</option><option>Установка шайбы</option><option>Расточка шайбы</option><option>Открытие задвижки</option><option>Прикрытие задвижки</option><option>Очистка грязевика/сопла</option><option>Промывка системы</option><option>Рекомендация КСК</option>
+        </select>
+    </div>
+
+    <div id="modalFieldBurstId" class="hidden">
+        <label>ID Порыва:</label>
+        <input type="text" id="modalBurstId" placeholder="(необязательно)">
+    </div>
+
+    <label>Дата и Время (измените, если вносите задним числом):</label>
+    <input type="datetime-local" id="modalDateTime" required>
+
+    <div id="modalFieldComment" class="hidden">
+        <label>Комментарий / Уточнение:</label>
+        <input type="text" id="modalComment">
+    </div>
+
+    <div class="row" style="justify-content:space-between; margin-top: 15px;">
+        <button id="btnModalCancel" class="sm">Отмена</button>
+        <button id="btnModalApply" class="primary sm">Применить</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// --- БАЗА ДАННЫХ И БЕЗЛИМИТНОЕ ХРАНИЛИЩЕ (IndexedDB) ---
+const IDB = {
+    dbName: 'TeploNetworkDB',
+    version: 1,
+    init: function() {
+        return new Promise((resolve, reject) => {
+            const request = indexedDB.open(this.dbName, this.version);
+            request.onupgradeneeded = (e) => {
+                const db = e.target.result;
+                if (!db.objectStoreNames.contains('data')) {
+                    db.createObjectStore('data');
+                }
+            };
+            request.onsuccess = (e) => resolve(e.target.result);
+            request.onerror = (e) => reject(e.target.error);
+        });
+    },
+    get: async function(key) {
+        const db = await this.init();
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction('data', 'readonly');
+            const store = tx.objectStore('data');
+            const request = store.get(key);
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+        });
+    },
+    set: async function(key, value) {
+        const db = await this.init();
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction('data', 'readwrite');
+            const store = tx.objectStore('data');
+            const request = store.put(value, key);
+            request.onsuccess = () => resolve();
+            request.onerror = () => reject(request.error);
+        });
+    }
+};
+
+// --- СЛОВАРЬ ПЕРЕВОДА RU / KZ ---
+const LANG = {
+    ru: {
+        app_title: "🔥 Теплосеть <span class='badge'>v3.12.0 А.Зиненко</span>",
+        stat_total: "Всего в базе:", stat_forecast: "Прогноз:", stat_off: "Отключено:", stat_loss: "Потери тепла:", stat_active: "Заявок:",
+        btn_reset_db: "🗑️ Сброс БД", btn_reset_out: "💥 Сброс статусов", btn_export: "💾 Бэкап (JSON)", btn_import: "📂 Импорт (JSON)", btn_csv: "📥 Загрузить Юр.лиц (CSV)",
+        card_title: "🏠 Карточка дома / Объекта", lbl_street: "Улица", lbl_house: "Дом", lbl_block: "Корпус", lbl_tk: "ТК (отпайка)", lbl_owner: "Принадлежность",
+        lbl_source: "Источник (ТЭЦ/РК/БМК)", lbl_vdiam: "Задвижка (Ø)", lbl_wdiam: "Шайба (Ø)", lbl_sq: "Площадь", lbl_floors: "Этажей", lbl_flats: "Квартир",
+        lbl_load: "Нагрузка (Гкал/ч)", lbl_mgmt: "Управл. орг. / Абонент", lbl_contact: "Контакт", lbl_seasonal: "Сезонный объект", lbl_note: "Примечание / Тип объекта",
+        btn_save: "Сохранить", btn_new: "Очистить", btn_del: "Удалить", card_out: "⚠️ Отключения", lbl_status: "Статус:", lbl_burst: "ID Порыва",
+        lbl_reason: "Причина", lbl_comment: "Комментарий", lbl_start: "Начало", lbl_end: "План включения", btn_add_out: "🚫 ОТКЛЮЧИТЬ", btn_upd_out: "💾 Обновить План/Коммент.",
+        btn_close_out: "✅ ВКЛЮЧИТЬ (Факт.)", btn_force_out: "💥 ОЧИСТИТЬ ОТКЛЮЧЕНИЯ ДОМА", lbl_hist_out: "История отключений:", card_comp: "🗣️ Жалобы и замеры (Наладка)",
+        lbl_act_comp: "Активная жалоба:", lbl_c_date: "Дата жалобы", lbl_c_type: "Суть жалобы", lbl_src_params: "Параметры источника", lbl_t_out: "Т нар.возд.",
+        lbl_c_src_t: "Т (П/О)", lbl_c_src_p: "Р (П/О)", lbl_house_params: "Фактические замеры в доме", lbl_c_house_t: "Т (П/О) в УТ", lbl_c_house_p: "Р (П/О) в УТ",
+        lbl_c_state: "Статус", lbl_c_action: "Принятые меры", lbl_c_comment: "Комментарий к закрытию", btn_save_comp: "💾 Сохранить", btn_new_comp: "Новая запись",
+        lbl_hist_comp: "История жалоб:", btn_del_all_comp: "💥 Удалить ВСЕ жалобы дома", plh_search: "🔍 Поиск: адрес, ТК, абонент...", flt_off: "Откл.", flt_comp: "Жалобы",
+        flt_seas: "Сезонники", btn_print: "🖨️ Печать", btn_m_out: "🚫 Масс. Откл.", btn_m_in: "✅ Масс. Вкл.", btn_m_plan: "📅 Масс. План", btn_m_comp: "🗣️ Жал.",
+        btn_m_comp_c: "✅ Решить", th_addr: "Адрес / Абонент", th_tk: "ТК", th_cat: "Категория", th_load: "Нагрузка", th_src: "Источник", th_burst: "ID Порыва",
+        th_start: "Начало Откл.", th_end: "Прогноз Вкл.", th_down: "Простой (ч)"
+    },
+    kz: {
+        app_title: "🔥 Жылу желісі <span class='badge'>v3.12.0 А.Зиненко</span>",
+        stat_total: "Дерекқорда:", stat_forecast: "Болжам:", stat_off: "Ажыратылған:", stat_loss: "Жылу жоғалуы:", stat_active: "Өтінімдер:",
+        btn_reset_db: "🗑️ ДҚ тазарту", btn_reset_out: "💥 Мәртебелерді жою", btn_export: "💾 Бэкап (JSON)", btn_import: "📂 Импорт (JSON)", btn_csv: "📥 Заңды тұлғ. ДҚ (CSV)",
+        card_title: "🏠 Үй / Нысан картасы", lbl_street: "Көше", lbl_house: "Үй", lbl_block: "Корпус", lbl_tk: "ЖК (тармақ)", lbl_owner: "Тиесілігі",
+        lbl_source: "Көз (ЖЭО/ҚҚ/БМҚ)", lbl_vdiam: "Ысырма (Ø)", lbl_wdiam: "Шайба (Ø)", lbl_sq: "Ауданы", lbl_floors: "Қабаттар", lbl_flats: "Пәтерлер",
+        lbl_load: "Жүктеме (Гкал/сағ)", lbl_mgmt: "Басқарушы ұйым / Абонент", lbl_contact: "Байланыс", lbl_seasonal: "Маусымдық нысан", lbl_note: "Ескертпе / Нысан түрі",
+        btn_save: "Сақтау", btn_new: "Тазарту", btn_del: "Жою", card_out: "⚠️ Ажыратулар", lbl_status: "Мәртебесі:", lbl_burst: "Жарылу ID",
+        lbl_reason: "Себебі", lbl_comment: "Түсініктеме", lbl_start: "Басталуы", lbl_end: "Қосу жоспары", btn_add_out: "🚫 АЖЫРАТУ", btn_upd_out: "💾 Жоспар/Түсінік. жаңарту",
+        btn_close_out: "✅ ҚОСУ (Факт.)", btn_force_out: "💥 ҮЙДІҢ АЖЫРАТУЛАРЫН ТАЗАРТУ", lbl_hist_out: "Ажыратулар тарихы:", card_comp: "🗣️ Шағымдар (Реттеу)",
+        lbl_act_comp: "Белсенді шағым:", lbl_c_date: "Шағым күні", lbl_c_type: "Шағымның мәні", lbl_src_params: "Көз параметрлері", lbl_t_out: "Сырт.ауа Т.",
+        lbl_c_src_t: "Т (Б/Қ)", lbl_c_src_p: "Қ (Б/Қ)", lbl_house_params: "Үйдегі өлшемдер", lbl_c_house_t: "ЖТ-дағы Т (Б/Қ)", lbl_c_house_p: "ЖТ-дағы Қ (Б/Қ)",
+        lbl_c_state: "Мәртебесі", lbl_c_action: "Қабылданған шаралар", lbl_c_comment: "Жабуға түсініктеме", btn_save_comp: "💾 Сақтау", btn_new_comp: "Жаңа жазба",
+        lbl_hist_comp: "Шағымдар тарихы:", btn_del_all_comp: "💥 Үйдің БАРЛЫҚ шағымдарын жою", plh_search: "🔍 Іздеу: мекенжай, ЖК, абонент...", flt_off: "Ажырат.", flt_comp: "Шағым.",
+        flt_seas: "Маусымдық", btn_print: "🖨️ Басып шығару", btn_m_out: "🚫 Жаппай Ажырат.", btn_m_in: "✅ Жаппай Қосу", btn_m_plan: "📅 Жаппай Жоспар", btn_m_comp: "🗣️ Шағым.",
+        btn_m_comp_c: "✅ Шешу", th_addr: "Мекенжай / Абонент", th_tk: "ЖК", th_cat: "Санат", th_load: "Жүктеме", th_src: "Көз", th_burst: "Жарылу ID",
+        th_start: "Ажырат. басталуы", th_end: "Қосу болжамы", th_down: "Тоқтап тұру (сағ)"
+    }
+};
+
+const APP = (function(){
+    const DB_KEY = 'teplo_houses_v3';
+    const OUT_KEY = 'teplo_outages_v3';
+    const COMP_KEY = 'teplo_complaints_v3'; 
+    const LANG_KEY = 'teplo_lang';
+    
+    let houses = [];
+    let outages = [];
+    let complaints = []; 
+    let selectedIds = new Set();
+    const NORMATIVE_HOURS = 24; 
+    let massActionType = null; 
+    let showOnlyForecast = false; 
+    let currentLang = localStorage.getItem(LANG_KEY) || 'ru';
+
+    const $ = id => document.getElementById(id);
+    const els = {
+        // ДОБАВЛЕН seasonal (сезонники)
+        f: { id: $('f_id'), street: $('f_street'), house: $('f_house'), block: $('f_block'), tk: $('f_tk'), owner: $('f_owner'), source: $('f_source'), vdiam: $('f_vdiam'), wdiam: $('f_wdiam'), sq: $('f_sq'), floors: $('f_floors'), flats: $('f_flats'), load: $('f_load'), mgmt: $('f_mgmt'), contact: $('f_contact'), seasonal: $('f_seasonal'), note: $('f_note') },
+        o: { reason: $('o_reason'), comment: $('o_comment'), start: $('o_start'), end: $('o_end'), burstId: $('o_burstId') },
+        c: { id: $('c_id'), date: $('c_date'), type: $('c_type'), t_out: $('c_t_out'), src_t: $('c_src_t'), src_p: $('c_src_p'), house_t: $('c_house_t'), house_p: $('c_house_p'), state: $('c_state'), action: $('c_action'), comment: $('c_comment') },
+        listBody: $('listBody'), total: $('d_total'), off: $('d_off'), active: $('d_active'),
+        lossLoad: $('d_loss_load'),
+        forecastBtn: $('btnToggleForecast'), forecastCount: $('d_forecast'),
+        q: $('q'), filter_off_only: $('filter_off_only'), filter_complaints: $('filter_complaints'), filter_seasonal: $('filter_seasonal'),
+        checkAll: $('checkAll'),
+        // ДОБАВЛЕН mSeasonal (массовые сезонники)
+        mass: { panel: $('massPanel'), count: $('m_count'), editFields: $('massEditFields'), mOwner: $('m_owner'), mSource: $('m_source'), mTk: $('m_tk'), mVdiam: $('m_vdiam'), mWdiam: $('m_wdiam'), mSeasonal: $('m_seasonal') },
+        massModal: { 
+            overlay: $('massActionModal'), title: $('modalTitle'),
+            dateTime: $('modalDateTime'), comment: $('modalComment'),
+            reason: $('modalReason'), compType: $('modalCompType'),
+            actionTaken: $('modalAction'), burstId: $('modalBurstId'),
+            fReason: $('modalFieldReason'), fCompType: $('modalFieldCompType'),
+            fAction: $('modalFieldAction'), fBurstId: $('modalFieldBurstId'),
+            fComment: $('modalFieldComment'),
+            apply: $('btnModalApply'), cancel: $('btnModalCancel')
+        }
+    };
+    
+    const nowISO = () => new Date().toISOString();
+    const toISODate = (localDatetime) => { if (!localDatetime) return null; return new Date(localDatetime).toISOString(); };
+    const toLocalInput = (isoDate) => {
+        if (!isoDate) return '';
+        const date = new Date(isoDate);
+        date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
+        return date.toISOString().slice(0, 16);
+    };
+
+    function applyLang() {
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+            const key = el.getAttribute('data-i18n');
+            if (LANG[currentLang] && LANG[currentLang][key]) {
+                if (el.tagName === 'INPUT' && el.hasAttribute('placeholder')) {
+                    el.placeholder = LANG[currentLang][key];
+                } else {
+                    el.innerHTML = LANG[currentLang][key];
+                }
+            }
+        });
+        $('btnLangToggle').textContent = currentLang === 'ru' ? '🇷🇺 RU / 🇰🇿 KZ' : '🇰🇿 KZ / 🇷🇺 RU';
+    }
+    
+    const getOwnerDisplay = (code) => {
+        const mapRu = { 'our': 'Наш', 'consumer': 'Физ. лицо', 'juridical': 'Юр. лицо', 'social': 'Соц. объект', 'ksk': 'КСК / ОСИ' };
+        const mapKz = { 'our': 'Біздікі', 'consumer': 'Жеке тұлға', 'juridical': 'Заңды тұлға', 'social': 'Әлеум. нысан', 'ksk': 'ПИК / МИБ' };
+        return currentLang === 'ru' ? (mapRu[code] || '—') : (mapKz[code] || '—');
+    };
+    const getSourceDisplay = (code) => {
+        const map = {'TETs1': 'ТЭЦ-1', 'TETs2': 'ТЭЦ-2', 'RK3': 'РК-3', 'BMK92': 'БМК-92', 'BMK93': 'БМК-93', 'BMKAero': 'БМК Аэропорт', 'BMKAA': 'БМК Алтын Арман', 'BMKBereke': 'БМК Береке', 'BMKKunai': 'БМК Кунай', 'BMKDruzhba': 'БМК Дружба', 'OTHER': 'Другой'};
+        let res = map[code] || '—';
+        if (currentLang === 'kz') { res = res.replace('ТЭЦ', 'ЖЭО').replace('Другой', 'Басқа').replace('Аэропорт', 'Әуежай'); }
+        return res;
+    };
+
+    function calculateDowntime(startISO) {
+        if (!startISO) return { hours: 0, status: 'ok' };
+        const hours = (new Date().getTime() - new Date(startISO).getTime()) / (1000 * 60 * 60);
+        let status = 'ok';
+        if (hours >= NORMATIVE_HOURS) status = 'red';
+        else if (hours >= NORMATIVE_HOURS * 0.5) status = 'warn';
+        return { hours: Math.max(0, hours), status: status };
+    }
+
+    // --- ОБНОВЛЕННАЯ ФУНКЦИЯ ЗАГРУЗКИ С ПЕРЕНОСОМ ДАННЫХ ИЗ localStorage ---
+    async function loadData(){
+        try {
+            let h = await IDB.get(DB_KEY);
+            let o = await IDB.get(OUT_KEY);
+            let c = await IDB.get(COMP_KEY);
+
+            // Если в новой базе (IndexedDB) еще ничего нет, но есть в старой (localStorage)
+            if (!h && localStorage.getItem(DB_KEY)) {
+                console.log("Выполняется перенос базы из localStorage в IndexedDB...");
+                h = JSON.parse(localStorage.getItem(DB_KEY) || '[]');
+                o = JSON.parse(localStorage.getItem(OUT_KEY) || '[]');
+                c = JSON.parse(localStorage.getItem(COMP_KEY) || '[]');
+                
+                // Сохраняем в новую безлимитную базу
+                await IDB.set(DB_KEY, h);
+                await IDB.set(OUT_KEY, o);
+                await IDB.set(COMP_KEY, c);
+            }
+
+            houses = h || [];
+            outages = o || [];
+            complaints = c || [];
+
+            // Восстанавливаем ID если где-то потерялись
+            houses.forEach(h => { if (!h.id) h.id = crypto.randomUUID(); });
+            outages.forEach(o => { delete o.planDispatcher; if(!o.id) o.id = crypto.randomUUID(); });
+            complaints.forEach(c => { if(!c.id) c.id = crypto.randomUUID(); });
+
+        } catch(e) { 
+            console.error("Ошибка загрузки базы данных", e);
+            houses=[]; outages=[]; complaints=[]; 
+        }
+        updateStats();
+        renderList();
+    }
+
+    // --- ОБНОВЛЕННАЯ ФУНКЦИЯ СОХРАНЕНИЯ В IndexedDB ---
+    async function saveData(){
+        await IDB.set(DB_KEY, houses);
+        await IDB.set(OUT_KEY, outages);
+        await IDB.set(COMP_KEY, complaints);
+    }
+
+    function getActiveOutage(houseId) { return outages.find(o => o.houseId === houseId && o.actualEnd === null); }
+    function getActiveComplaint(houseId) { return complaints.find(c => c.houseId === houseId && c.state === 'open'); }
+    
+    function updateStats() {
+        els.total.textContent = houses.length;
+        
+        let offCount = 0; let totalLoss = 0;
+        houses.forEach(h => {
+            if (getActiveOutage(h.id)) {
+                offCount++;
+                if (h.load && !isNaN(h.load)) { totalLoss += Number(h.load); }
+            }
+        });
+        
+        els.off.textContent = offCount;
+        els.lossLoad.textContent = totalLoss.toFixed(3);
+        els.active.textContent = outages.filter(o => o.actualEnd === null).length;
+    }
+
+    async function saveHouse(){
+        const hid = els.f.id.value;
+        let h = hid ? houses.find(h => h.id === hid) : null;
+        const isNew = !h;
+        if (!els.f.street.value || !els.f.house.value) return alert('Поля "Улица" и "Дом" обязательны.');
+        if (isNew) { h = { id: crypto.randomUUID(), created: nowISO() }; houses.push(h); }
+        Object.keys(els.f).forEach(key => { if (key !== 'id' && key !== 'seasonal') h[key] = els.f[key].value.trim() || null; });
+        
+        h.seasonal = els.f.seasonal.checked; // Сохраняем галочку сезонности
+        ['sq', 'floors', 'flats', 'load'].forEach(key => { h[key] = (h[key] !== null && h[key] !== '') ? Number(h[key]) : null; });
+        
+        h.updated = nowISO();
+        await saveData(); clearForm(); renderList(); alert(`🏠 Объект ${isNew ? 'добавлен' : 'сохранен'}.`);
+    }
+
+    async function deleteHouse(){
+        if(!els.f.id.value || !confirm('Точно удалить этот объект и всю его историю?')) return;
+        houses = houses.filter(h => h.id !== els.f.id.value);
+        outages = outages.filter(o => o.houseId !== els.f.id.value);
+        complaints = complaints.filter(c => c.houseId !== els.f.id.value);
+        await saveData(); clearForm(); renderList();
+    }
+
+    function clearForm(){
+        Object.values(els.f).forEach(el => { if(el.type !== 'checkbox') el.value = ''; });
+        els.f.owner.value = 'our'; els.f.source.value = 'TETs1'; els.f.seasonal.checked = false;
+        $('h_status').textContent = currentLang === 'ru' ? 'В работе' : 'Жұмыста'; $('h_status').style.color = 'var(--ok)';
+        $('tblHistory').innerHTML = ''; $('view_id').textContent = 'ID: ...'; els.f.street.focus();
+        els.o.comment.value = ''; els.o.start.value = ''; els.o.end.value = ''; els.o.reason.value = 'Порыв'; els.o.burstId.value = '';
+        clearComplaintForm(); $('tblComplaints').innerHTML = '';
+    }
+
+    function clearComplaintForm(){
+        Object.values(els.c).forEach(el => el.value = '');
+        els.c.type.value = 'Низкая температура'; els.c.state.value = 'open';
+        els.c.date.value = new Date().toISOString().split('T')[0];
+        $('c_status_display').textContent = 'Нет'; $('c_status_display').style.color = '#94a3b8';
+    }
+
+    function loadComplaintIntoForm(c) {
+        Object.keys(els.c).forEach(key => { if(els.c[key]) els.c[key].value = c[key] || ''; });
+        const disp = $('c_status_display');
+        if(c.state === 'open') { disp.textContent = 'ОТКРЫТА'; disp.style.color = '#38bdf8'; } 
+        else if (c.state === 'unconfirmed') { disp.textContent = 'Не подтверждена'; disp.style.color = 'var(--muted)'; } 
+        else { disp.textContent = 'ЗАКРЫТА'; disp.style.color = 'var(--ok)'; }
+    }
+
+    async function saveComplaint() {
+        const hid = els.f.id.value;
+        if (!hid) return alert('Сначала выберите объект!');
+        let cid = els.c.id.value;
+        let c = cid ? complaints.find(comp => comp.id === cid) : null;
+        if (!c) { c = { id: crypto.randomUUID(), houseId: hid }; complaints.push(c); }
+        Object.keys(els.c).forEach(key => { if (key !== 'id') c[key] = els.c[key].value.trim(); });
+        await saveData(); editHouse(hid); renderList(); alert('Жалоба сохранена.');
+    }
+
+    function editComplaint(cid) {
+        const c = complaints.find(comp => comp.id === cid);
+        if(c) loadComplaintIntoForm(c);
+    }
+
+    async function deleteComplaint(cid) {
+        if(!confirm('Точно удалить эту жалобу?')) return;
+        complaints = complaints.filter(c => c.id !== cid);
+        await saveData(); editHouse(els.f.id.value); renderList();
+    }
+
+    async function deleteAllHouseComplaints() {
+        const hid = els.f.id.value;
+        if(!hid || !confirm('ВНИМАНИЕ! Вы точно хотите удалить ВСЕ жалобы для этого дома?')) return;
+        complaints = complaints.filter(c => c.houseId !== hid);
+        await saveData(); editHouse(hid); renderList(); alert('Все жалобы по дому удалены.');
+    }
+
+    async function resetDB() {
+        const pwd = prompt("⚠️ ВНИМАНИЕ! Вы собираетесь удалить ВСЕ текущие отключения и жалобы из базы.\n(Список домов останется нетронутым).\n\nВведите пароль для подтверждения:", "");
+        if (pwd === "1234") {
+            outages = []; complaints = [];
+            await saveData(); updateStats(); renderList(); alert("✅ Базы отключений и жалоб успешно очищены!");
+        } else if (pwd !== null) { alert("❌ Неверный пароль!"); }
+    }
+
+    function editHouse(hid){
+        const h = houses.find(house => house.id === hid);
+        if(!h) return clearForm();
+
+        Object.keys(els.f).forEach(key => { if(key !== 'seasonal' && els.f[key]) els.f[key].value = h[key] || ''; });
+        els.f.seasonal.checked = h.seasonal || false; // Загружаем галочку сезонности
+        $('view_id').textContent = `ID: ${hid.slice(0, 8)}...`;
+
+        const activeOutage = getActiveOutage(hid);
+        if(activeOutage){
+            const downtime = calculateDowntime(activeOutage.start);
+            $('h_status').textContent = currentLang === 'ru' ? `ОТКЛЮЧЕН (${downtime.hours.toFixed(1)} ч)` : `АЖЫРАТЫЛҒАН (${downtime.hours.toFixed(1)} сағ)`;
+            $('h_status').style.color = downtime.status === 'red' ? 'var(--red)' : 'var(--warn)';
+            els.o.reason.value = activeOutage.reason || 'Порыв'; els.o.comment.value = activeOutage.comment || '';
+            els.o.start.value = toLocalInput(activeOutage.start); els.o.end.value = activeOutage.planEnd ? toLocalInput(activeOutage.planEnd) : '';
+            els.o.burstId.value = activeOutage.burstId || '';
+        } else {
+            $('h_status').textContent = currentLang === 'ru' ? 'В работе' : 'Жұмыста'; $('h_status').style.color = 'var(--ok)';
+            els.o.reason.value = 'Порыв'; els.o.comment.value = ''; els.o.start.value = ''; els.o.end.value = ''; els.o.burstId.value = '';
+        }
+        
+        $('tblHistory').innerHTML = outages.filter(o => o.houseId === hid).sort((a,b) => new Date(b.start) - new Date(a.start)).map(o => {
+            const start = new Date(o.start).toLocaleString('ru-RU', {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'});
+            const end = o.actualEnd ? new Date(o.actualEnd).toLocaleString('ru-RU', {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'}) : '—';
+            return `<tr><td style="width:20px"><div class="status-dot ${o.actualEnd ? 'ok' : 'err'}"></div></td>
+                <td><b>${o.reason}</b>${o.burstId ? ` [ID: ${o.burstId}]` : ''}<br>${start} - ${end}<br><span style="color:#94a3b8">${o.comment || 'Нет комментария'}</span></td></tr>`;
+        }).join('');
+
+        clearComplaintForm();
+        const activeComp = getActiveComplaint(hid);
+        if(activeComp) loadComplaintIntoForm(activeComp);
+        
+        $('tblComplaints').innerHTML = complaints.filter(c => c.houseId === hid).sort((a,b) => new Date(b.date) - new Date(a.date)).map(c => {
+            const dateStr = new Date(c.date).toLocaleDateString('ru-RU');
+            const stateText = c.state === 'open' ? (currentLang==='ru'?'⚠️ В работе':'⚠️ Жұмыста') : (c.state === 'unconfirmed' ? (currentLang==='ru'?'❌ Не подтв.':'❌ Расталмаған') : (currentLang==='ru'?'✅ Решена':'✅ Шешілді'));
+            return `<tr><td style="width:20px"><div class="status-dot ${c.state === 'closed' ? 'ok' : 'err'}"></div></td>
+                <td><a href="#" class="link" onclick="APP.editComplaint('${c.id}'); return false;">${dateStr} - ${c.type}</a> <span class="action-del" onclick="APP.deleteComplaint('${c.id}')" title="Удалить запись">✕</span><br>
+                <span style="color:#94a3b8">${stateText} | УТ: ${c.house_t||'-'}/${c.house_p||'-'} | ${c.action||'-'}</span></td></tr>`;
+        }).join('');
+    }
+
+    async function addOutage(e){
+        e.preventDefault(); const hid = els.f.id.value;
+        if (!hid) return alert('Выберите объект для отключения.');
+        if (!els.o.start.value.trim()) return alert('Укажите время начала отключения.');
+        if(getActiveOutage(hid)) return alert('У объекта уже есть активное отключение!');
+
+        outages.push({ id: crypto.randomUUID(), houseId: hid, start: toISODate(els.o.start.value), reason: els.o.reason.value || 'Порыв', comment: els.o.comment.value || '', planEnd: els.o.end.value ? toISODate(els.o.end.value) : null, actualEnd: null, burstId: els.o.burstId.value.trim() || null });
+        await saveData(); editHouse(hid); renderList(); alert(`🚫 Объект отключен.`);
+    }
+
+    function closeOutage(e){
+        e.preventDefault(); const hid = els.f.id.value; const activeOutage = getActiveOutage(hid);
+        if (!activeOutage) return alert('Нет активного отключения для закрытия.');
+        massActionType = 'single_outage_close'; const m = els.massModal;
+        m.fReason.classList.add('hidden'); m.fCompType.classList.add('hidden'); m.fAction.classList.add('hidden'); m.fBurstId.classList.add('hidden'); m.fComment.classList.remove('hidden');
+        m.comment.value = ''; m.dateTime.value = toLocalInput(nowISO()); m.title.textContent = currentLang==='ru'?'Включение (Факт)':'Қосу (Факт)'; m.overlay.classList.add('active'); m.dateTime.focus();
+    }
+
+    async function updateOutageFields(){
+        const hid = els.f.id.value; const activeOutage = getActiveOutage(hid);
+        if (!activeOutage) return alert('Нет активного отключения.');
+        activeOutage.reason = els.o.reason.value; activeOutage.comment = els.o.comment.value; activeOutage.planEnd = els.o.end.value ? toISODate(els.o.end.value) : null; activeOutage.burstId = els.o.burstId.value.trim() || null; 
+        await saveData(); editHouse(hid); renderList(); alert('Поля активного отключения обновлены!');
+    }
+
+    async function forceCloseOutageHouse(){
+        const hid = els.f.id.value;
+        if (!hid || !confirm('Очистить все АКТИВНЫЕ записи об отключении для этого объекта?')) return;
+        const now = nowISO();
+        outages = outages.map(o => { if (o.houseId === hid && !o.actualEnd) { o.actualEnd = now; o.planEnd = null; o.comment = (o.comment || '') + ' [ПРИНУДИТЕЛЬНО ЗАКРЫТО]'; } return o; });
+        await saveData(); editHouse(hid); renderList();
+    }
+
+    async function resetAllOutages(){
+        if(!confirm('ВНИМАНИЕ! ЗАКРЫТЬ ВСЕ незакрытые отключения в базе?')) return;
+        const now = nowISO(); let count = 0;
+        outages = outages.map(o => { if (!o.actualEnd) { o.actualEnd = now; o.planEnd = null; o.comment = (o.comment || '') + ' [МАССОВОЕ ЗАКРЫТИЕ]'; count++; } return o; });
+        await saveData(); renderList(); alert(`💥 Принудительно закрыто ${count} отключений.`);
+    }
+
+    function renderList(){
+        updateStats();
+        const q = els.q.value.trim().toLowerCase();
+        const offOnly = els.filter_off_only.checked; 
+        const compOnly = els.filter_complaints.checked;
+        const seasOnly = els.filter_seasonal.checked; // Фильтр сезонников
+        
+        const filterOwner = $('filter_owner').value; const filterSource = $('filter_source').value;
+
+        let list = houses.filter(h => {
+            if (showOnlyForecast && !selectedIds.has(h.id)) return false;
+            const out = getActiveOutage(h.id); const comp = getActiveComplaint(h.id);
+            if (offOnly && !out) return false;
+            if (compOnly && !comp) return false;
+            if (seasOnly && !h.seasonal) return false; // Применение фильтра сезонников
+            
+            if (filterOwner !== 'all' && h.owner !== filterOwner) return false;
+            if (filterSource !== 'all' && h.source !== filterSource) return false;
+
+            if (q) {
+                const burstId = out ? out.burstId || '' : ''; const mgmt = h.mgmt ? h.mgmt.toLowerCase() : '';
+                if (`${h.street} ${h.house} ${h.tk} ${mgmt} ${burstId}`.toLowerCase().indexOf(q) === -1) return false;
+            }
+            return true;
+        });
+
+        list.sort((a,b) => {
+            const aOut = getActiveOutage(a.id); const bOut = getActiveOutage(b.id);
+            if (aOut && !bOut) return -1; if (!aOut && bOut) return 1;
+            if (aOut && bOut) return calculateDowntime(bOut.start).hours - calculateDowntime(aOut.start).hours;
+            return a.street.localeCompare(b.street) || (a.house * 1) - (b.house * 1);
+        });
+
+        els.listBody.innerHTML = list.map(h => {
+            const out = getActiveOutage(h.id); const comp = getActiveComplaint(h.id); 
+            const downtime = out ? calculateDowntime(out.start) : { hours: 0, status: 'ok' };
+            const statusClass = out ? 'is-out' + (downtime.status === 'red' ? ' exceeded' : '') : '';
+            const isSelected = selectedIds.has(h.id);
+
+            let downtimeText = out ? downtime.hours.toFixed(1) + (currentLang==='ru'?' ч':' сағ') : '';
+            if (downtime.status === 'red') downtimeText = `<b style="color:var(--red)">${downtimeText}</b>`;
+            else if (downtime.status === 'warn') downtimeText = `<b style="color:var(--warn)">${downtimeText}</b>`;
+
+            const planEndTime = out && out.planEnd ? new Date(out.planEnd).toLocaleString('ru-RU', {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'}) : '—';
+            const burstIdText = out && out.burstId ? `<span class="link clickable" onclick="APP.editHouse('${h.id}')">${out.burstId}</span>` : '—';
+            
+            const compBadge = comp ? `<span style="color:#38bdf8; font-size:10px; font-weight:bold; margin-left:4px;" title="Есть жалоба">[🗣️]</span>` : '';
+            const seasBadge = h.seasonal ? `<span style="color:#10b981; font-size:10px; font-weight:bold; margin-left:4px;" title="Сезонный объект">[🍂]</span>` : '';
+            
+            let addrDisplay = `${h.street}, ${h.house}${h.block||''}`;
+            if(h.mgmt) addrDisplay += `<br><span style="font-size:10px; color:#94a3b8">${h.mgmt}</span>`;
+
+            // НОВАЯ СТРОКА: кнопка открытия карты
+            const mapBtn = `<span class="clickable" style="margin-left:8px;" onclick="event.stopPropagation(); APP.showOnMap('${h.street.replace(/'/g, "\\'")}', '${h.house}', '${h.block ? h.block.replace(/'/g, "\\'") : ''}')" title="Показать на карте">📍</span>`;
+
+            const loadDisplay = h.load ? parseFloat(h.load).toFixed(3) : '0.000';
+
+            return `<tr class="${statusClass} ${isSelected ? 'selected' : ''}" data-id="${h.id}">
+                <td><input type="checkbox" data-id="${h.id}" class="check-box" ${isSelected ? 'checked' : ''}></td>
+                <td class="link" onclick="APP.editHouse('${h.id}')">${addrDisplay}${compBadge}${seasBadge}${mapBtn}</td>
+                <td>${h.tk||'—'}</td><td>${getOwnerDisplay(h.owner)}</td>
+                <td style="color:#f43f5e; font-weight:500;">${loadDisplay}</td>
+                <td>${getSourceDisplay(h.source)}</td>
+                <td>${burstIdText}</td>
+                <td>${out ? new Date(out.start).toLocaleString('ru-RU', {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'}) : '—'}</td>
+                <td>${planEndTime}</td><td>${downtimeText}</td>
+            </tr>`;
+        }).join('');
+
+        const visibleRows = els.listBody.querySelectorAll('tr');
+        if (visibleRows.length > 0) {
+            let allVisibleSelected = true;
+            visibleRows.forEach(row => { if (!selectedIds.has(row.dataset.id)) allVisibleSelected = false; });
+            els.checkAll.checked = allVisibleSelected;
+        } else { els.checkAll.checked = false; }
+    }
+
+    function openMassModal(action) {
+        if(selectedIds.size === 0) return alert('Сначала выберите объекты (галочками слева).');
+        massActionType = action; const m = els.massModal;
+        m.fReason.classList.add('hidden'); m.fCompType.classList.add('hidden'); m.fAction.classList.add('hidden'); m.fBurstId.classList.add('hidden'); m.fComment.classList.add('hidden');
+        m.comment.value = ''; m.burstId.value = ''; m.dateTime.value = toLocalInput(nowISO()); 
+
+        if (action === 'outage_new') { m.title.textContent = 'Массовое Отключение'; m.fReason.classList.remove('hidden'); m.fBurstId.classList.remove('hidden'); m.fComment.classList.remove('hidden'); } 
+        else if (action === 'outage_close') { m.title.textContent = 'Массовое Включение (Факт)'; m.fComment.classList.remove('hidden'); } 
+        else if (action === 'outage_plan') { m.title.textContent = 'Массовый Прогноз Включения'; m.fComment.classList.remove('hidden'); } 
+        else if (action === 'comp_new') { m.title.textContent = 'Добавить Массовые Жалобы'; m.fCompType.classList.remove('hidden'); m.fComment.classList.remove('hidden'); } 
+        else if (action === 'comp_close') { m.title.textContent = 'Массовое Решение Жалоб'; m.fAction.classList.remove('hidden'); m.fComment.classList.remove('hidden'); }
+        m.overlay.classList.add('active'); m.dateTime.focus();
+    }
+    
+    function closeMassModal() { els.massModal.overlay.classList.remove('active'); massActionType = null; }
+    
+    async function handleMassModalApply() {
+        const m = els.massModal; const dateInput = m.dateTime.value; 
+        if (!dateInput) return alert('Пожалуйста, выберите дату и время!'); 
+        const dateISO = toISODate(dateInput); const comment = m.comment.value.trim();
+        let count = 0;
+
+        switch(massActionType) {
+            case 'single_outage_close':
+                const hid = els.f.id.value; const out = getActiveOutage(hid);
+                if(out) { out.actualEnd = dateISO; out.planEnd = null; if (comment) out.comment = (out.comment || '') + ' [Вкл: ' + comment + ']'; alert('✅ Объект успешно включен.'); }
+                await saveData(); renderList(); editHouse(hid); closeMassModal(); return; 
+            case 'outage_new':
+                const reason = m.reason.value; const burstId = m.burstId.value.trim();
+                selectedIds.forEach(id => { if(!getActiveOutage(id)){ outages.push({ id: crypto.randomUUID(), houseId: id, start: dateISO, reason: reason, comment: comment, actualEnd: null, planEnd: null, burstId: burstId || null }); count++; } });
+                alert(`Отключено ${count} объектов.`); break;
+            case 'outage_close':
+                outages = outages.map(o => { if(selectedIds.has(o.houseId) && !o.actualEnd){ o.actualEnd = dateISO; o.planEnd = null; o.comment = (o.comment || '') + ' [Масс. вкл.] ' + comment; count++; } return o; });
+                alert(`Включено ${count} объектов.`); break;
+            case 'outage_plan':
+                outages = outages.map(o => { if(selectedIds.has(o.houseId) && !o.actualEnd){ o.planEnd = dateISO; o.comment = (o.comment || '') + ' [Прогноз обновлен] ' + comment; count++; } return o; });
+                alert(`Прогноз обновлен для ${count} объектов.`); break;
+            case 'comp_new':
+                const type = m.compType.value;
+                selectedIds.forEach(id => { complaints.push({ id: crypto.randomUUID(), houseId: id, type: type, date: dateISO, state: 'open' }); count++; });
+                alert(`Жалобы добавлены для ${count} объектов.`); break;
+            case 'comp_close':
+                const actionTaken = m.actionTaken.value;
+                complaints = complaints.map(c => { if(selectedIds.has(c.houseId) && c.state === 'open') { c.state = 'closed'; c.action = actionTaken; c.comment = (c.comment || '') + (comment ? ' [Решение: ' + comment + ']' : ''); count++; } return c; });
+                alert(`Успешно закрыто ${count} жалоб.`); break;
+        }
+
+        await saveData(); 
+        if (showOnlyForecast) { showOnlyForecast = false; els.forecastBtn.classList.remove('active'); }
+        selectedIds.clear(); els.checkAll.checked = false;
+        updateSelectionUI(); renderList(); closeMassModal();
+    }
+
+    function clearSelection() {
+        selectedIds.clear(); els.checkAll.checked = false;
+        if (showOnlyForecast) { showOnlyForecast = false; els.forecastBtn.classList.remove('active'); }
+        updateSelectionUI(); renderList();
+    }
+
+    function updateSelectionUI(){
+        const count = selectedIds.size; els.mass.count.textContent = count; els.forecastCount.textContent = count; 
+        if (count === 0 && showOnlyForecast) { showOnlyForecast = false; els.forecastBtn.classList.remove('active'); renderList(); }
+        if(count > 0){ els.mass.panel.classList.remove('hidden'); } else { els.mass.panel.classList.add('hidden'); els.mass.editFields.style.display = 'none'; $('btnToggleEditFields').textContent = '⮞ Редакт. данных'; }
+    }
+
+    function toggleAll(checkbox){
+        document.querySelectorAll('#listBody tr').forEach(row => {
+            const id = row.dataset.id;
+            if(checkbox.checked){ selectedIds.add(id); row.querySelector('.check-box').checked = true; row.classList.add('selected'); } 
+            else { selectedIds.delete(id); row.querySelector('.check-box').checked = false; row.classList.remove('selected'); }
+        });
+        updateSelectionUI();
+        if (showOnlyForecast && !checkbox.checked) renderList();
+    }
+
+    function handleCheck(e){
+        if(!e.target.classList.contains('check-box')) return;
+        const row = e.target.closest('tr'); const id = row.dataset.id;
+        if(e.target.checked){ selectedIds.add(id); row.classList.add('selected'); } else { selectedIds.delete(id); row.classList.remove('selected'); }
+        updateSelectionUI();
+        const visibleRows = els.listBody.querySelectorAll('tr');
+        if (visibleRows.length > 0) {
+            let allVisibleSelected = true;
+            visibleRows.forEach(r => { if (!selectedIds.has(r.dataset.id)) allVisibleSelected = false; });
+            els.checkAll.checked = allVisibleSelected;
+        }
+        if (showOnlyForecast) renderList(); 
+    }
+
+    async function massEditHouseData(){
+        if(selectedIds.size === 0) return; if(!confirm(`Обновить данные ${selectedIds.size} объектов?`)) return;
+        const data = { owner: els.mass.mOwner.value, source: els.mass.mSource.value, tk: els.mass.mTk.value, vdiam: els.mass.mVdiam.value, wdiam: els.mass.mWdiam.value, seasonal: els.mass.mSeasonal.value };
+        let count = 0;
+        houses = houses.map(h => {
+            if(selectedIds.has(h.id)){
+                let changed = false;
+                if(data.owner) { h.owner = data.owner; changed = true; } if(data.source) { h.source = data.source; changed = true; }
+                if(data.tk) { h.tk = data.tk; changed = true; } if(data.vdiam) { h.vdiam = data.vdiam; changed = true; } if(data.wdiam) { h.wdiam = data.wdiam; changed = true; }
+                if(data.seasonal !== "") { h.seasonal = (data.seasonal === "true"); changed = true; } // Обновление сезонности
+                if(changed) count++;
+            }
+            return h;
+        });
+        await saveData(); renderList();
+        els.mass.mOwner.value = ''; els.mass.mSource.value = ''; els.mass.mTk.value = ''; els.mass.mVdiam.value = ''; els.mass.mWdiam.value = ''; els.mass.mSeasonal.value = '';
+        alert(`Данные обновлены для ${count} объектов.`);
+    }
+
+    function toggleMassEditFields(){
+        const panel = els.mass.editFields; const btn = $('btnToggleEditFields');
+        if (panel.style.display === 'none' || panel.style.display === '') { panel.style.display = 'flex'; btn.textContent = '⮟ Скрыть'; } 
+        else { panel.style.display = 'none'; btn.textContent = '⮞ Редакт. данных'; }
+    }
+
+    // --- ПАРСЕР CSV ДЛЯ ЮР.ЛИЦ ---
+    function parseCSVLine(text) {
+        let re_value = /(?!\s*$)\s*(?:'([^'\\]*(?:\\[\s\S][^'\\]*)*)'|"([^"\\]*(?:\\[\s\S][^"\\]*)*)"|([^,'"\s\\]*(?:\s+[^,'"\s\\]+)*))\s*(?:,|$)/g;
+        let a = [];
+        text.replace(re_value, function(m0, m1, m2, m3) {
+            if (m1 !== undefined) a.push(m1.replace(/\\'/g, "'"));
+            else if (m2 !== undefined) a.push(m2.replace(/\\"/g, '"').replace(/""/g, '"'));
+            else if (m3 !== undefined) a.push(m3);
+            return '';
+        });
+        if (/,\s*$/.test(text)) a.push('');
+        return a;
+    }
+
+    function importCSV(file) {
+        const reader = new FileReader();
+        reader.onload = async function(e) {
+            try {
+                let lines = e.target.result.split('\n');
+                let headerIdx = -1;
+                for(let i=0; i<Math.min(20, lines.length); i++) {
+                    if(lines[i].includes('Улица') && lines[i].includes('Абонент')) { headerIdx = i; break; }
+                }
+                if(headerIdx === -1) return alert('Не найден заголовок таблицы в CSV! Убедитесь, что файл сохранен верно.');
+
+                let headers = lines[headerIdx].split(',');
+                let colSource = headers.findIndex(h => h.includes('ТП/ИТ'));
+                let colAbonent = headers.findIndex(h => h.includes('Абонент'));
+                let colGroup = headers.findIndex(h => h.includes('Отраслевая группа'));
+                let colObj = headers.findIndex(h => h.includes('Наименование'));
+                let colStreet = headers.findIndex(h => h.includes('Улица'));
+                let colHouse = headers.findIndex(h => h.includes('Номер дома'));
+
+                let added = 0;
+                for(let i = headerIdx + 1; i < lines.length; i++) {
+                    if(!lines[i].trim()) continue;
+                    let row = parseCSVLine(lines[i]);
+                    if(row.length <= colHouse) continue;
+
+                    let street = row[colStreet] ? row[colStreet].trim() : '';
+                    let house = row[colHouse] ? row[colHouse].trim() : '';
+                    if(!street || !house) continue;
+
+                    let abonent = row[colAbonent] ? row[colAbonent].trim() : '';
+                    let group = row[colGroup] ? row[colGroup].trim() : '';
+                    let obj = row[colObj] ? row[colObj].trim() : '';
+                    let sourceRaw = row[colSource] ? row[colSource].trim() : '';
+
+                    let owner = 'juridical';
+                    let gLow = group.toLowerCase();
+                    if(gLow.includes('бюджет') || gLow.includes('учреждения') || gLow.includes('объединения')) owner = 'social';
+                    else if(gLow.includes('кооператив')) owner = 'ksk';
+
+                    let source = 'OTHER';
+                    let sLow = sourceRaw.toLowerCase();
+                    if(sLow.includes('тэц-1')) source = 'TETs1';
+                    else if(sLow.includes('тэц-2')) source = 'TETs2';
+                    else if(sLow.includes('рк-3')) source = 'RK3';
+                    else if(sLow.includes('аэропорт')) source = 'BMKAero';
+                    else if(sLow.includes('алтын арман')) source = 'BMKAA';
+                    else if(sLow.includes('береке')) source = 'BMKBereke';
+                    else if(sLow.includes('кунай')) source = 'BMKKunai';
+                    else if(sLow.includes('дружба')) source = 'BMKDruzhba';
+                    else if(sLow.includes('92')) source = 'BMK92';
+                    else if(sLow.includes('93')) source = 'BMK93';
+
+                    houses.push({
+                        id: crypto.randomUUID(),
+                        street: street,
+                        house: house,
+                        owner: owner,
+                        source: source,
+                        mgmt: abonent,
+                        note: obj ? `[Объект] ${obj}` : '',
+                        seasonal: false, // По умолчанию не сезонник
+                        created: nowISO()
+                    });
+                    added++;
+                }
+                await saveData(); renderList(); alert(`Успешно загружено ${added} объектов из CSV!`);
+            } catch(error) { alert(`Ошибка при чтении CSV: ${error.message}`); }
+        };
+        
+        reader.readAsText(file, 'windows-1251');
+    }
+
+    function exportJSON(){
+        const data = { houses: houses, outages: outages, complaints: complaints };
+        const json = JSON.stringify(data, null, 2);
+        const blob = new Blob([json], {type: "application/json"});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `teploset_backup_${new Date().toISOString().slice(0, 10)}.json`;
+        document.body.appendChild(a);
+        a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+    }
+
+    function importJSON(file){
+        const reader = new FileReader();
+        reader.onload = async function(e){
+            try {
+                const data = JSON.parse(e.target.result);
+                if (data.houses && data.outages) {
+                    houses = data.houses;
+                    outages = data.outages;
+                    complaints = data.complaints || [];
+                    await saveData(); // Теперь сохраняет без лимита
+                    updateStats();
+                    renderList();
+                    alert('✅ Данные успешно импортированы и загружены!');
+                } else { throw new Error("Неверная структура данных."); }
+            } catch(error) { alert(`🚫 Ошибка при импорте JSON: ${error.message}`); }
+        };
+        reader.readAsText(file);
+    }
+
+    // НОВАЯ ФУНКЦИЯ: Показать на карте (2GIS)
+    function showOnMap(street, house, block) {
+        const b = block ? block : '';
+        const fullAddress = `Костанай, ${street} ${house}${b}`;
+        const url = `https://2gis.kz/kostanay/search/${encodeURIComponent(fullAddress)}`;
+        window.open(url, '_blank');
+    }
+
+    async function init() {
+        $('btnLangToggle').onclick = () => {
+            currentLang = currentLang === 'ru' ? 'kz' : 'ru';
+            localStorage.setItem(LANG_KEY, currentLang);
+            applyLang();
+            renderList();
+        };
+
+        applyLang(); // Применяем язык при старте
+        await loadData(); // Ждем, пока загрузится безлимитная база
+
+        $('btnSave').onclick = saveHouse; $('btnNew').onclick = clearForm; $('btnDelete').onclick = deleteHouse;
+        $('btnAddOutage').onclick = addOutage; $('btnCloseOutage').onclick = closeOutage; 
+        $('btnUpdateOutageFields').onclick = updateOutageFields;
+        $('btnForceCloseOutage').onclick = forceCloseOutageHouse; $('btnResetAllOutages').onclick = resetAllOutages;
+        $('btnResetDB').onclick = resetDB;
+        
+        $('btnSaveComplaint').onclick = saveComplaint; $('btnClearComplaint').onclick = clearComplaintForm; 
+        $('btnDeleteAllHouseComplaints').onclick = deleteAllHouseComplaints;
+
+        $('btnExport').onclick = exportJSON;
+        $('fileImport').onchange = (e) => { if (e.target.files.length) importJSON(e.target.files[0]); };
+        $('csvImport').onchange = (e) => { if (e.target.files.length) importCSV(e.target.files[0]); };
+
+        els.q.oninput = renderList; $('filter_owner').onchange = renderList; $('filter_source').onchange = renderList; 
+        els.filter_off_only.onchange = renderList; els.filter_complaints.onchange = renderList; els.filter_seasonal.onchange = renderList;
+        
+        els.forecastBtn.onclick = () => {
+            if (selectedIds.size === 0) return alert('Сначала наберите дома в прогноз (поставьте галочки слева).');
+            showOnlyForecast = !showOnlyForecast;
+            els.forecastBtn.classList.toggle('active', showOnlyForecast);
+            renderList();
+        };
+
+        $('btnMassClear').onclick = clearSelection;
+        $('btnPrint').onclick = () => window.print();
+
+        $('btnMassOut').onclick = () => openMassModal('outage_new');
+        $('btnMassIn').onclick = () => openMassModal('outage_close');
+        $('btnMassPlanUpdate').onclick = () => openMassModal('outage_plan');
+        $('btnMassComp').onclick = () => openMassModal('comp_new');
+        $('btnMassCompClose').onclick = () => openMassModal('comp_close');
+        
+        $('mainTable').addEventListener('click', (e) => { if (e.target.classList.contains('link')) editHouse(e.target.closest('tr').dataset.id); });
+        $('checkAll').onchange = (e) => toggleAll(e.target);
+        els.listBody.addEventListener('click', handleCheck);
+
+        els.massModal.apply.onclick = handleMassModalApply; els.massModal.cancel.onclick = closeMassModal;
+        els.massModal.overlay.addEventListener('click', (e) => { if (e.target.id === 'massActionModal') closeMassModal(); });
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && els.massModal.overlay.classList.contains('active')) closeMassModal(); });
+
+        $('btnToggleEditFields').onclick = toggleMassEditFields; $('btnMassEditApply').onclick = massEditHouseData;
+    }
+
+    return { init, editHouse, editComplaint, deleteComplaint, showOnMap };
+})();
+
+window.onload = APP.init;
+</script>
+
+</body>
+</html>

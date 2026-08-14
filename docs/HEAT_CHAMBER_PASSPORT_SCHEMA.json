@@ -1,0 +1,1680 @@
+{
+  "reference_object": {
+    "object_name": "ТК26-02",
+    "passport_google_drive_url": "https://drive.google.com/file/d/1lp_8OVOWzuV4SPQDrlQlmooljcZi9vl3/view?usp=sharing",
+    "fields_detected_in_passport": [
+      "object_name",
+      "section_number",
+      "diameter_mm",
+      "year_installed",
+      "status",
+      "material",
+      "notes",
+      "coordinates",
+      "passport_google_drive_url"
+    ],
+    "notes": "The passport is a scanned technical sheet showing a chamber diagram and a table of sections. The visible clear values: chamber code ТК26-02, pipe sizes Ø426, section labels 26-02.1 / 26-02.2 / 26-02.3 and year markers 2019. Other parameters were not legible enough to assert without fabrication."
+  },
+  "field_model": [
+    {
+      "field": "object_type",
+      "type": "string",
+      "required": true
+    },
+    {
+      "field": "object_name",
+      "type": "string",
+      "required": true
+    },
+    {
+      "field": "object_code",
+      "type": "string",
+      "required": true
+    },
+    {
+      "field": "passport_google_drive_url",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "coordinates",
+      "type": "geo_point",
+      "required": true
+    },
+    {
+      "field": "section_number",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "diameter_mm",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "year_installed",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "status",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "material",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "notes",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "source",
+      "type": "string",
+      "required": true
+    }
+  ],
+  "items": [
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК 26-02-01",
+      "object_code": "ТК 26-02-01",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.2450033,
+        "lon": 63.611459
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК 26-02-04",
+      "object_code": "ТК 26-02-04",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.2441021,
+        "lon": 63.6111534
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК 26-02-05",
+      "object_code": "ТК 26-02-05",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.2440714,
+        "lon": 63.611963
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК 26-02-06",
+      "object_code": "ТК 26-02-06",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.2436384,
+        "lon": 63.6093544
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК 26-03",
+      "object_code": "ТК 26-03",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.2457969,
+        "lon": 63.6083633
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК 26-03-02",
+      "object_code": "ТК 26-03-02",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.2448811,
+        "lon": 63.606967
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК 26-03-01",
+      "object_code": "ТК 26-03-01",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.2453251,
+        "lon": 63.6077489
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК 26-04-01",
+      "object_code": "ТК 26-04-01",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.24639,
+        "lon": 63.6062993
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК 26-04",
+      "object_code": "ТК 26-04",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.2464749,
+        "lon": 63.6063884
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК 26-04-02",
+      "object_code": "ТК 26-04-02",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.2462093,
+        "lon": 63.6060447
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК 26-07",
+      "object_code": "ТК 26-07",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.2458293,
+        "lon": 63.6044397
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК 26-05",
+      "object_code": "ТК 26-05",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.2466297,
+        "lon": 63.6058627
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК 26-07-01",
+      "object_code": "ТК 26-07-01",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.2457043,
+        "lon": 63.6046357
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК 26-08",
+      "object_code": "ТК 26-08",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.2466813,
+        "lon": 63.6030846
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК 26-09-02",
+      "object_code": "ТК 26-09-02",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.2471721,
+        "lon": 63.6022621
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК 26-09-01",
+      "object_code": "ТК 26-09-01",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.2473129,
+        "lon": 63.6024906
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК 26-09-03",
+      "object_code": "ТК 26-09-03",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.2472888,
+        "lon": 63.6020646
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК 26-06",
+      "object_code": "ТК 26-06",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.2462505,
+        "lon": 63.6051846
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК 25-07",
+      "object_code": "ТК 25-07",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.2440097,
+        "lon": 63.6208288
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК 25-08",
+      "object_code": "ТК 25-08",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.2429106,
+        "lon": 63.6223035
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК 25-06-01",
+      "object_code": "ТК 25-06-01",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.2436833,
+        "lon": 63.6188882
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК 25-06",
+      "object_code": "ТК 25-06",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.2439738,
+        "lon": 63.6193025
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК 25-06-02",
+      "object_code": "ТК 25-06-02",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.2456686,
+        "lon": 63.6184406
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК 25-03",
+      "object_code": "ТК 25-03",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.2430932,
+        "lon": 63.6169857
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК 26-01",
+      "object_code": "ТК 26-01",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.2451869,
+        "lon": 63.6123281
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК 26-01А",
+      "object_code": "ТК 26-01А",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.2450641,
+        "lon": 63.6122757
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК 25-05-02",
+      "object_code": "ТК 25-05-02",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.2414851,
+        "lon": 63.6153219
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК 25-05-01",
+      "object_code": "ТК 25-05-01",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.2420088,
+        "lon": 63.6143285
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК 25-05",
+      "object_code": "ТК 25-05",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.2417965,
+        "lon": 63.6146731
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК 25-05-03",
+      "object_code": "ТК 25-05-03",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.2410413,
+        "lon": 63.615166
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК 25-05-04",
+      "object_code": "ТК 25-05-04",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.2389929,
+        "lon": 63.6175008
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК 25-04-01",
+      "object_code": "ТК 25-04-01",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.2426355,
+        "lon": 63.6154438
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК 25-04",
+      "object_code": "ТК 25-04",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.2424616,
+        "lon": 63.6158271
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК 25-03-01",
+      "object_code": "ТК 25-03-01",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.2434672,
+        "lon": 63.6163885
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК 25-03-02",
+      "object_code": "ТК 25-03-02",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.2435146,
+        "lon": 63.6164582
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК 25-03-03",
+      "object_code": "ТК 25-03-03",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.2437796,
+        "lon": 63.616916
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК 25-03-04",
+      "object_code": "ТК 25-03-04",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.2437871,
+        "lon": 63.6160258
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК 23-05-05",
+      "object_code": "ТК 23-05-05",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.2438689,
+        "lon": 63.6150318
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК 25-03-06",
+      "object_code": "ТК 25-03-06",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.2438021,
+        "lon": 63.6151424
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК 25-03-07",
+      "object_code": "ТК 25-03-07",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.2432519,
+        "lon": 63.6139106
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК 25-03-09",
+      "object_code": "ТК 25-03-09",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.2420832,
+        "lon": 63.611884
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК 25-03-10",
+      "object_code": "ТК 25-03-10",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.2422749,
+        "lon": 63.6115654
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК 25-03-11",
+      "object_code": "ТК 25-03-11",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.2423365,
+        "lon": 63.6181533
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК 25-03-12",
+      "object_code": "ТК 25-03-12",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.2425736,
+        "lon": 63.6185819
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК 25-03-13",
+      "object_code": "ТК 25-03-13",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.241087,
+        "lon": 63.6201692
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК 25-01",
+      "object_code": "ТК 25-01",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.2441195,
+        "lon": 63.6184669
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК 25-03-08",
+      "object_code": "ТК 25-03-08",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.2427832,
+        "lon": 63.6131291
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК 26-08-01",
+      "object_code": "ТК 26-08-01",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.2467668,
+        "lon": 63.6032027
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК 3-11",
+      "object_code": "ТК 3-11",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.227982,
+        "lon": 63.6190005
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК 3-10",
+      "object_code": "ТК 3-10",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.2274481,
+        "lon": 63.6182388
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "тк 5-06",
+      "object_code": "тк 5-06",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.2231807,
+        "lon": 63.6287401
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК тм15",
+      "object_code": "ТК тм15",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.1657366,
+        "lon": 63.6040512
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК 14-02",
+      "object_code": "ТК 14-02",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.173151,
+        "lon": 63.5985498
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК 2-07",
+      "object_code": "ТК 2-07",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.2220992,
+        "lon": 63.6216694
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК",
+      "object_code": "ТК",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.2346713,
+        "lon": 63.6343237
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК 4-10л",
+      "object_code": "ТК 4-10л",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.2332417,
+        "lon": 63.6358511
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК 4-14",
+      "object_code": "ТК 4-14",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.236153,
+        "lon": 63.639936
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК 4-08",
+      "object_code": "ТК 4-08",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.2316773,
+        "lon": 63.6336192
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК 4-09 пр",
+      "object_code": "ТК 4-09 пр",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.2326567,
+        "lon": 63.6349957
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК 80мм",
+      "object_code": "ТК 80мм",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.2336378,
+        "lon": 63.6357781
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК 5-05",
+      "object_code": "ТК 5-05",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.2234727,
+        "lon": 63.6281613
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК 26-02-07",
+      "object_code": "ТК 26-02-07",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.2448008,
+        "lon": 63.613555
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК 2-18",
+      "object_code": "ТК 2-18",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.2125498,
+        "lon": 63.6401914
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК 20-06",
+      "object_code": "ТК 20-06",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.243152,
+        "lon": 63.677318
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК",
+      "object_code": "ТК",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.2328715,
+        "lon": 63.6617897
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК",
+      "object_code": "ТК",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.2182816,
+        "lon": 63.6409834
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК",
+      "object_code": "ТК",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.1903956,
+        "lon": 63.6042305
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК",
+      "object_code": "ТК",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.2486441,
+        "lon": 63.6721432
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК на ЖД вокзал",
+      "object_code": "ТК на ЖД вокзал",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.227496,
+        "lon": 63.6072468
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК",
+      "object_code": "ТК",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.2056673,
+        "lon": 63.6329936
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК",
+      "object_code": "ТК",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.2235128,
+        "lon": 63.6254118
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК",
+      "object_code": "ТК",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.2236774,
+        "lon": 63.6250873
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК",
+      "object_code": "ТК",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.2238089,
+        "lon": 63.6252845
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК",
+      "object_code": "ТК",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.2290797,
+        "lon": 63.6379485
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК",
+      "object_code": "ТК",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.2285749,
+        "lon": 63.6378
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК",
+      "object_code": "ТК",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.23418,
+        "lon": 63.6317005
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК",
+      "object_code": "ТК",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.1977408,
+        "lon": 63.6191876
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК",
+      "object_code": "ТК",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.2187749,
+        "lon": 63.5729847
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК",
+      "object_code": "ТК",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.2161182,
+        "lon": 63.5735932
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК",
+      "object_code": "ТК",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.216349,
+        "lon": 63.574177
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК",
+      "object_code": "ТК",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.2185913,
+        "lon": 63.5726571
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК",
+      "object_code": "ТК",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.2217531,
+        "lon": 63.5603753
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК",
+      "object_code": "ТК",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.2224448,
+        "lon": 63.5603091
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК",
+      "object_code": "ТК",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.223069,
+        "lon": 63.5612713
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК",
+      "object_code": "ТК",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.2220011,
+        "lon": 63.5674769
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК",
+      "object_code": "ТК",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.2221328,
+        "lon": 63.5677505
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК",
+      "object_code": "ТК",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.2343386,
+        "lon": 63.635002
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК",
+      "object_code": "ТК",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.2340376,
+        "lon": 63.6320079
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК",
+      "object_code": "ТК",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.2061284,
+        "lon": 63.6073391
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК",
+      "object_code": "ТК",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.2304245,
+        "lon": 63.6193366
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК",
+      "object_code": "ТК",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.2239435,
+        "lon": 63.6151161
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК 20-06-01",
+      "object_code": "ТК 20-06-01",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.2431328,
+        "lon": 63.6773665
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "ТК 5-03-03",
+      "object_code": "ТК 5-03-03",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.2231627,
+        "lon": 63.6243621
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    },
+    {
+      "object_type": "heat_chamber",
+      "object_name": "Проектируемая ТК",
+      "object_code": "Проектируемая ТК",
+      "passport_google_drive_url": "N/A",
+      "coordinates": {
+        "lat": 53.2215433,
+        "lon": 63.6206177
+      },
+      "section_number": "N/A",
+      "diameter_mm": "N/A",
+      "year_installed": "N/A",
+      "status": "N/A",
+      "material": "N/A",
+      "notes": "N/A",
+      "source": "KML import"
+    }
+  ]
+}

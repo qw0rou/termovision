@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS unmatched_tk (id INTEGER PRIMARY KEY AUTOINCREMENT,en
 CREATE TABLE IF NOT EXISTS thresholds (key TEXT PRIMARY KEY,min REAL,max REAL,label TEXT);
 CREATE TABLE IF NOT EXISTS node_types (id INTEGER PRIMARY KEY AUTOINCREMENT,name TEXT UNIQUE,color TEXT DEFAULT '#64748b');
 CREATE TABLE IF NOT EXISTS passport_fields (id INTEGER PRIMARY KEY AUTOINCREMENT,entity_type TEXT,field_key TEXT,label TEXT,field_type TEXT DEFAULT 'text');
+CREATE TABLE IF NOT EXISTS object_passports (id INTEGER PRIMARY KEY AUTOINCREMENT,entity_type TEXT,entity_id TEXT,entity_name TEXT,passport_url TEXT,section_number TEXT,diameter_mm TEXT,year_installed TEXT,material TEXT,status TEXT,notes TEXT,coordinates TEXT,source TEXT,raw TEXT,updated_at TEXT DEFAULT CURRENT_TIMESTAMP,UNIQUE(entity_type,entity_id));
 CREATE TABLE IF NOT EXISTS topology_edits (id INTEGER PRIMARY KEY AUTOINCREMENT,node_id TEXT,lat REAL,lon REAL,note TEXT,created_at TEXT DEFAULT CURRENT_TIMESTAMP);
 CREATE TABLE IF NOT EXISTS utility_crossings (id INTEGER PRIMARY KEY AUTOINCREMENT,type TEXT,lat REAL,lon REAL,note TEXT);
 CREATE TABLE IF NOT EXISTS inspections (id TEXT PRIMARY KEY,node_id TEXT,task_id TEXT,worker TEXT,observed_at TEXT,result TEXT,note TEXT,photos TEXT,lat REAL,lon REAL,synced_at TEXT DEFAULT CURRENT_TIMESTAMP);
@@ -56,4 +57,106 @@ for(const r of [['Течь','1'],['Коррозия','2'],['Нарушение �
 for(const r of [['Низкая',3,'#22c55e'],['Средняя',5,'#f59e0b'],['Высокая',8,'#ef4444'],['Критическая',10,'#7f1d1d']])db.prepare('INSERT OR IGNORE INTO severity_levels(name,value,color) VALUES(?,?,?)').run(...r);
 for(const r of [['Низкий',1],['Средний',5],['Высокий',8],['Аварийный',10]])db.prepare('INSERT OR IGNORE INTO repair_priorities(name,value) VALUES(?,?)').run(...r);
 for(const r of [['admin','["*"]'],['dispatcher','["map.view","search","scenarios.run","scenarios.save","tasks.manage","repairs.manage","reports.view","analytics.view","notifications.view","editor.edit"]'],['field','["map.view","search","field.work","field.defects","field.topology","offline.sync"]']])db.prepare('INSERT OR IGNORE INTO permissions VALUES(?,?)').run(...r);
+for(const row of [
+  ['heat_chamber','object_type','Тип объекта','text'],
+  ['heat_chamber','object_name','Наименование','text'],
+  ['heat_chamber','object_code','Код/номер','text'],
+  ['heat_chamber','passport_google_drive_url','Ссылка на паспорт','text'],
+  ['heat_chamber','coordinates','Координаты','coordinates'],
+  ['heat_chamber','section_number','Секция/номер участка','text'],
+  ['heat_chamber','diameter_mm','Диаметр, мм','number'],
+  ['heat_chamber','year_installed','Год установки','number'],
+  ['heat_chamber','status','Статус','select'],
+  ['heat_chamber','material','Материал','text'],
+  ['heat_chamber','notes','Примечания','text'],
+  ['heat_chamber','source','Источник данных','text'],
+  ['pipe','object_type','Тип объекта','text'],
+  ['pipe','object_name','Наименование','text'],
+  ['pipe','diameter_mm','Диаметр, мм','number'],
+  ['pipe','length_m','Длина, м','number'],
+  ['pipe','material','Материал','text'],
+  ['pipe','year_installed','Год установки','number'],
+  ['pipe','status','Статус','select'],
+  ['pipe','source','Источник данных','text'],
+  ['node','object_type','Тип объекта','text'],
+  ['node','object_name','Наименование','text'],
+  ['node','coordinates','Координаты','coordinates'],
+  ['node','status','Статус','select'],
+  ['node','source','Источник данных','text'],
+  ['heat_source','object_type','Тип объекта','text'],
+  ['heat_source','object_name','Наименование','text'],
+  ['heat_source','coordinates','Координаты','coordinates'],
+  ['heat_source','status','Статус','select'],
+  ['heat_source','source','Источник данных','text'],
+  ['drain','object_type','Тип объекта','text'],
+  ['drain','object_name','Наименование','text'],
+  ['drain','coordinates','Координаты','coordinates'],
+  ['drain','status','Статус','select'],
+  ['air_vent','object_type','Тип объекта','text'],
+  ['air_vent','object_name','Наименование','text'],
+  ['air_vent','coordinates','Координаты','coordinates'],
+  ['air_vent','status','Статус','select']
+])db.prepare('INSERT OR IGNORE INTO passport_fields(entity_type,field_key,label,field_type) VALUES(?,?,?,?)').run(...row);
+
+function normalizePassportName(name=''){ return String(name||'').trim(); }
+function normalizePassportValue(value){ return (value === undefined || value === null || value === '') ? null : String(value).trim(); }
+function parseSectionFromName(name=''){ const match = String(name).match(/(?:TK|ТК|TM|ТМ|OT|от|No|№)?\s*(\d{2}-\d{2}(?:-\d+)*)/i); return match ? match[1] : null; }
+function inferObjectType(name, isPipe=false){ const n = String(name||'').toLowerCase(); if (isPipe || /\b(?:tm|тм|от)\b/.test(n)) return 'pipe'; if (/\b(?:tk|тк)\b/.test(n)) return 'heat_chamber'; if (/\b(?:бмк|рк|тэц|источник)\b/.test(n)) return 'heat_source'; if (/\b(?:дрен|drain)\b/.test(n)) return 'drain'; if (/\b(?:вент|возд|vent|air)\b/.test(n)) return 'air_vent'; if (/\b(?:узел|узл)\b/.test(n)) return 'node'; return 'heat_chamber'; }
+function passportUrlFromMeta(raw){ if (!raw || typeof raw !== 'object') return null; const desc = raw.description || raw.Description || ''; const text = normalizePassportValue(desc) || ''; const match = text.match(/https?:\/\/[^\s<>"']+/i) || text.match(/https:\/\/drive\.google\.com\/file\/d\/[^\s<>"']+/i); return match ? match[0] : null; }
+function safeJsonParse(value){ try { return value ? JSON.parse(value) : {}; } catch (e) { return {}; } }
+function seedObjectPassports(){
+  db.prepare('DELETE FROM object_passports').run();
+  const entries = [];
+  for (const node of db.prepare('SELECT * FROM nodes').all()) {
+    const raw = safeJsonParse(node.meta);
+    const name = normalizePassportName(node.name);
+    const type = inferObjectType(name, false);
+    if (!name) continue;
+    if (type === 'heat_chamber' || type === 'heat_source' || type === 'drain' || type === 'air_vent' || type === 'node') {
+      entries.push({
+        entity_type: type,
+        entity_id: node.id,
+        entity_name: name,
+        passport_url: passportUrlFromMeta(raw),
+        section_number: parseSectionFromName(name),
+        diameter_mm: null,
+        year_installed: null,
+        material: null,
+        status: normalizePassportValue(node.status),
+        notes: normalizePassportValue(node.notes),
+        coordinates: node.lat && node.lon ? JSON.stringify({ lat: node.lat, lon: node.lon }) : null,
+        source: normalizePassportValue(node.folder) || 'KML import',
+        raw: JSON.stringify(raw)
+      });
+    }
+  }
+  for (const pipe of db.prepare('SELECT * FROM pipes').all()) {
+    const raw = safeJsonParse(pipe.meta);
+    const name = normalizePassportName(pipe.name);
+    const type = inferObjectType(name, true);
+    if (!name) continue;
+    entries.push({
+      entity_type: type,
+      entity_id: pipe.id,
+      entity_name: name,
+      passport_url: passportUrlFromMeta(raw),
+      section_number: parseSectionFromName(name),
+      diameter_mm: pipe.diameter_mm != null ? String(pipe.diameter_mm) : null,
+      year_installed: null,
+      material: normalizePassportValue(pipe.material),
+      status: normalizePassportValue(pipe.status),
+      notes: normalizePassportValue(pipe.meta),
+      coordinates: pipe.coordinates ? pipe.coordinates : null,
+      source: normalizePassportValue(pipe.folder) || 'KML import',
+      raw: JSON.stringify(raw)
+    });
+  }
+  const insert = db.prepare('INSERT INTO object_passports(entity_type,entity_id,entity_name,passport_url,section_number,diameter_mm,year_installed,material,status,notes,coordinates,source,raw) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)');
+  for (const row of entries) {
+    insert.run(row.entity_type,row.entity_id,row.entity_name,row.passport_url,row.section_number,row.diameter_mm,row.year_installed,row.material,row.status,row.notes,row.coordinates,row.source,row.raw);
+  }
+}
+
+db.seedObjectPassports = seedObjectPassports;
+seedObjectPassports();
 module.exports=db;

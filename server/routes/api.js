@@ -297,6 +297,85 @@ router.get('/spatial/nearby', (req, res) => {
   res.json({ nodes, socialObjects: social, utilities });
 });
 
+// ---- MOBILE / FIELD OPERATIONS ----
+router.get('/mobile/tasks', (req, res) => {
+  const tasks = db.prepare('SELECT * FROM inspection_tasks WHERE status != ? ORDER BY priority DESC, planned_at').get('done');
+  res.json(tasks || []);
+});
+
+router.get('/mobile/task/:id', (req, res) => {
+  const task = db.prepare('SELECT * FROM inspection_tasks WHERE id=?').get(req.params.id);
+  if (!task) return res.sendStatus(404);
+  const inspections = db.prepare('SELECT * FROM inspections WHERE task_id=? ORDER BY observed_at DESC').all(task.id);
+  const node = db.prepare('SELECT * FROM nodes WHERE id=?').get(task.node_id);
+  res.json({ task, inspections, node });
+});
+
+router.post('/mobile/inspections', (req, res) => {
+  const b = req.body || {};
+  if (!b.taskId || !b.nodeId) return res.status(400).json({ error: 'taskId и nodeId обязательны' });
+  const inspectionId = id('insp');
+  db.prepare('INSERT INTO inspections(id, node_id, task_id, worker, observed_at, result, note, photos, lat, lon, synced_at) VALUES(?,?,?,?,?,?,?,?,?,?,?)')
+    .run(inspectionId, b.nodeId, b.taskId, b.worker || 'field-worker', new Date().toISOString(), b.result || '', b.note || '', JSON.stringify(b.photos || []), b.lat || null, b.lon || null, new Date().toISOString());
+  db.prepare("UPDATE inspection_tasks SET status=? WHERE id=?").run('in_progress', b.taskId);
+  auth.logAudit(auth.currentUser(req), 'inspection.create', 'inspection', inspectionId, { taskId: b.taskId, nodeId: b.nodeId });
+  res.json({ ok: true, id: inspectionId });
+});
+
+router.put('/mobile/inspections/:id', (req, res) => {
+  const insp = db.prepare('SELECT * FROM inspections WHERE id=?').get(req.params.id);
+  if (!insp) return res.sendStatus(404);
+  const b = req.body || {};
+  if (b.result) db.prepare('UPDATE inspections SET result=? WHERE id=?').run(b.result, insp.id);
+  if (b.note) db.prepare('UPDATE inspections SET note=? WHERE id=?').run(b.note, insp.id);
+  if (b.photos) db.prepare('UPDATE inspections SET photos=? WHERE id=?').run(JSON.stringify(b.photos), insp.id);
+  if (b.lat !== undefined && b.lon !== undefined) db.prepare('UPDATE inspections SET lat=?, lon=? WHERE id=?').run(b.lat, b.lon, insp.id);
+  res.json({ ok: true });
+});
+
+router.post('/mobile/defects', (req, res) => {
+  const b = req.body || {};
+  if (!b.nodeId) return res.status(400).json({ error: 'nodeId обязателен' });
+  const defectId = id('defect');
+  db.prepare('INSERT INTO defects(id, source, date_observed, tk, node_id, address, defect_type, network_type, note, detected_by, priority, resolved, photos, raw) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)')
+    .run(defectId, 'field', new Date().toISOString(), '', b.nodeId, b.address || '', b.type || '', '', b.description || '', b.worker || '', b.priority || 2, 0, JSON.stringify(b.photos || []), JSON.stringify(b));
+  auth.logAudit(auth.currentUser(req), 'defect.create', 'defect', defectId, { nodeId: b.nodeId, type: b.type });
+  res.json({ ok: true, id: defectId });
+});
+
+router.post('/mobile/sync', (req, res) => {
+  // Offline-first sync: client sends locally-queued actions, server processes and returns conflicts/errors
+  const b = req.body || {};
+  const actions = b.actions || [];
+  const results = [];
+  
+  for (const act of actions) {
+    try {
+      if (act.type === 'inspection_update') {
+        db.prepare('UPDATE inspections SET result=?, note=?, photos=?, synced_at=? WHERE id=?')
+          .run(act.payload.result, act.payload.note, JSON.stringify(act.payload.photos || []), new Date().toISOString(), act.payload.id);
+        results.push({ id: act.id, status: 'ok' });
+      } else if (act.type === 'defect_create') {
+        const defectId = id('defect');
+        db.prepare('INSERT INTO defects(id, source, date_observed, tk, node_id, address, defect_type, network_type, note, detected_by, priority, resolved, photos, raw) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)')
+          .run(defectId, 'field', new Date().toISOString(), '', act.payload.nodeId, act.payload.address || '', act.payload.type || '', '', act.payload.description || '', act.payload.worker || '', act.payload.priority || 2, 0, JSON.stringify(act.payload.photos || []), JSON.stringify(act.payload));
+        results.push({ id: act.id, status: 'ok', newId: defectId });
+      }
+    } catch (e) {
+      results.push({ id: act.id, status: 'error', error: e.message });
+    }
+  }
+  
+  res.json({ synced: results.length, results });
+});
+
+router.get('/mobile/status', (req, res) => {
+  // Quick status check for field workers
+  const activeBursts = db.prepare("SELECT COUNT(*) n FROM bursts WHERE status='active'").get().n;
+  const lastSync = new Date().toISOString();
+  res.json({ online: true, activeBursts, lastSync });
+});
+
 module.exports = router;
 module.exports.id = id;
 module.exports.f = f;
